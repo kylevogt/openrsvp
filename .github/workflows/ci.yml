@@ -111,10 +111,13 @@ jobs:
   govulncheck:
     name: govulncheck
     runs-on: ubuntu-latest
-    # Run on the toolchain the project actually targets. go1.26.5 patches
-    # GO-2026-5856 (Encrypted Client Hello privacy leak in crypto/tls) on top of
-    # GO-2026-5037 (crypto/x509) and GO-2026-5039 (net/textproto); GOTOOLCHAIN=local
-    # pins the analysis to the installed version so the scan reflects 1.26.5.
+    # Run on the toolchain the project actually targets. go1.26.6 patches
+    # GO-2026-6218 (net/url), GO-2026-6091 (html/template), GO-2026-6090
+    # (crypto/tls), GO-2026-6089 and GO-2026-5026 (net/http), GO-2026-6088
+    # (encoding/xml) and GO-2026-5972 (encoding/asn1), on top of the crypto/tls,
+    # crypto/x509 and net/textproto advisories 1.26.5 already covered;
+    # GOTOOLCHAIN=local pins the analysis to the installed version so the scan
+    # reflects 1.26.6.
     # Keep this current as new stdlib advisories land: the Dockerfile builds on the
     # floating golang:1.26-alpine, so a stale pin here fails the gate on a
     # vulnerability the shipped binary does not actually carry.
@@ -124,7 +127,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
-          go-version: '1.26.5'
+          go-version: '1.26.6'
       - name: Create frontend placeholder for go:embed
         run: mkdir -p internal/server/frontend && touch internal/server/frontend/index.html
       - name: Install govulncheck

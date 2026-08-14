@@ -448,6 +448,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.8.2 (2026-08-13)
+
+**Fixes:**
+- **Magic link verification no longer hangs on the spinner.** `/auth/verify` stripped the token from the URL with `replaceState` from `$app/navigation` *before* the try/catch. Users always arrive there on a fresh document load from their email client, where SvelteKit's router is not yet initialized, so the call threw — aborting the page before `POST /api/v1/auth/verify` was ever sent, and, being outside the catch, never setting the error state. The result was an endless "Verifying your login" spinner and no way to sign in. The call now falls back to the native `history.replaceState` when the router is not ready, so the token is still stripped and verification always proceeds
+
 ### v1.8.1 (2026-07-26)
 
 **Fixes:**
