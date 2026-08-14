@@ -302,9 +302,7 @@
 	<title>{eventData ? `${eventData.title} — You're Invited` : "You're Invited"} — OpenRSVP</title>
 </svelte:head>
 
-<div class="invite-page min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12"
-	style="background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);"
->
+<div class="invite-page page-gradient min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12">
 	{#if loading}
 		<div class="flex items-center justify-center min-h-[60vh]">
 			<div class="flex flex-col items-center gap-4">
@@ -656,11 +654,11 @@
 						<button
 							type="submit"
 							disabled={submitting}
-							class="w-full rounded-lg bg-primary px-6 py-3 text-base font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
+							class="w-full rounded-lg bg-primary px-6 py-3 text-base font-semibold text-on-accent hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
 						>
 							{#if submitting}
 								<span class="inline-flex items-center gap-2">
-									<svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+									<svg class="animate-spin h-4 w-4 text-on-accent" fill="none" viewBox="0 0 24 24">
 										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 									</svg>
@@ -725,7 +723,7 @@
 								<button
 									type="submit"
 									disabled={lookupLoading}
-									class="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+									class="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-on-accent hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									{#if lookupLoading}
 										Sending...
@@ -762,7 +760,7 @@
 								<button
 									type="submit"
 									disabled={submittingComment || !newComment.trim()}
-									class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+									class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-accent hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 								>
 									{submittingComment ? 'Posting...' : 'Post Comment'}
 								</button>
@@ -824,6 +822,8 @@
 </div>
 
 <style>
+	/* Theme tokens rather than fixed colors — these sit on a themed card, so
+	   hardcoded light greens/ambers read as light-mode holes in dark mode. */
 	.rsvp-option {
 		display: flex;
 		flex-direction: column;
@@ -831,40 +831,40 @@
 		justify-content: center;
 		padding: 0.75rem 0.5rem;
 		border-radius: 10px;
-		border: 2px solid #E7E5E4;
+		border: 2px solid var(--color-neutral-200);
 		cursor: pointer;
 		transition: all 0.15s ease;
-		color: #78716C;
+		color: var(--color-neutral-500);
 		text-align: center;
 	}
 	.rsvp-option:hover {
-		border-color: #D6D3D1;
-		background-color: #FAFAF9;
+		border-color: var(--color-neutral-300);
+		background-color: var(--color-neutral-100);
 	}
 	.rsvp-option-selected {
 		border-width: 2px;
 	}
 	.rsvp-option-attending {
-		border-color: #22c55e;
-		background-color: #f0fdf4;
-		color: #16a34a;
+		border-color: var(--color-success);
+		background-color: var(--color-success-light);
+		color: var(--color-success);
 	}
 	.rsvp-option-maybe {
-		border-color: #f59e0b;
-		background-color: #fffbeb;
-		color: #d97706;
+		border-color: var(--color-warning);
+		background-color: var(--color-warning-light);
+		color: var(--color-warning);
 	}
 	.rsvp-option-declined {
-		border-color: #ef4444;
-		background-color: #fef2f2;
-		color: #dc2626;
+		border-color: var(--color-error);
+		background-color: var(--color-error-light);
+		color: var(--color-error);
 	}
 	.rsvp-option-disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.rsvp-option-disabled:hover {
-		border-color: #E7E5E4;
+		border-color: var(--color-neutral-200);
 		background-color: transparent;
 	}
 </style>

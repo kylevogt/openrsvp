@@ -66,10 +66,7 @@
 	<title>Unsubscribe — OpenRSVP</title>
 </svelte:head>
 
-<div
-	class="min-h-screen flex items-center justify-center px-4 py-12"
-	style="background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);"
->
+<div class="page-gradient min-h-screen flex items-center justify-center px-4 py-12">
 	<div class="w-full max-w-md">
 		<div class="text-center mb-6">
 			<a href="/" class="text-2xl font-bold text-primary">OpenRSVP</a>
@@ -111,7 +108,7 @@
 					type="button"
 					onclick={handleConfirm}
 					disabled={submitting}
-					class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+					class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
 				>
 					{#if submitting}
 						<span class="inline-flex items-center gap-2">
@@ -157,7 +154,7 @@
 					type="button"
 					onclick={handleConfirm}
 					disabled={submitting}
-					class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+					class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
 				>
 					{submitting ? 'Trying again…' : 'Try again'}
 				</button>

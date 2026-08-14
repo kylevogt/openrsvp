@@ -154,7 +154,7 @@
 					<div class="flex items-center {s < 3 ? 'flex-1' : ''}">
 						<div
 							class="flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium {s <= step
-								? 'bg-primary text-white'
+								? 'bg-primary text-on-accent'
 								: 'bg-neutral-200 text-neutral-600'}"
 						>
 							{s}

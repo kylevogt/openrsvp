@@ -230,7 +230,7 @@ func (s *Service) GetPublicInvite(ctx context.Context, shareToken string) (*Publ
 			Footer:         "",
 			PrimaryColor:   "#6366f1",
 			SecondaryColor: "#f0abfc",
-			Font:           "Inter",
+			Font:           "Plus Jakarta Sans",
 			CustomData:     "{}",
 		}
 	}

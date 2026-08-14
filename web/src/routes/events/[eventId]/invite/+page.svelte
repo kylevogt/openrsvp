@@ -30,7 +30,7 @@
 	let footer = $state('We hope to see you there!');
 	let primaryColor = $state('#4F46E5');
 	let secondaryColor = $state('#EC4899');
-	let font = $state('Inter');
+	let font = $state('Plus Jakarta Sans');
 
 	// Background image
 	let backgroundImageUrl = $state('');
@@ -99,13 +99,32 @@
 		}
 	];
 
+	// The first three are self-hosted by the app, so they render identically for
+	// every guest. The rest are web-safe families that fall back gracefully.
 	const fontOptions = [
-		{ value: 'Inter', label: 'Inter (Modern)' },
+		{ value: 'Satoshi', label: 'Satoshi (Display)' },
+		{ value: 'Plus Jakarta Sans', label: 'Plus Jakarta Sans (Modern)' },
+		{ value: 'Geist Mono', label: 'Geist Mono (Mono)' },
 		{ value: 'Georgia', label: 'Georgia (Serif)' },
-		{ value: 'Courier New', label: 'Courier New (Mono)' },
+		{ value: 'Courier New', label: 'Courier New (Typewriter)' },
 		{ value: 'Comic Sans MS', label: 'Comic Sans (Fun)' },
 		{ value: 'Arial', label: 'Arial (Clean)' }
 	];
+
+	// Cards saved before the app settled on self-hosted fonts stored families it
+	// never shipped ("Inter"), which the select would render as a blank choice.
+	// Map those onto the closest option so the dropdown always shows a selection.
+	const LEGACY_FONTS: Record<string, string> = {
+		Inter: 'Plus Jakarta Sans',
+		Helvetica: 'Arial',
+		'Times New Roman': 'Georgia'
+	};
+
+	function normalizeFont(name: string): string {
+		if (!name) return font;
+		if (fontOptions.some((o) => o.value === name)) return name;
+		return LEGACY_FONTS[name] ?? 'Plus Jakarta Sans';
+	}
 
 	const customDataJSON = $derived(
 		backgroundImageUrl
@@ -129,7 +148,7 @@
 				footer = invite.footer || footer;
 				primaryColor = invite.primaryColor || primaryColor;
 				secondaryColor = invite.secondaryColor || secondaryColor;
-				font = invite.font || font;
+				font = normalizeFont(invite.font);
 
 				// Load existing background image from customData
 				try {

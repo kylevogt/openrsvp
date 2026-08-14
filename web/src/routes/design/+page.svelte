@@ -8,6 +8,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { currentTheme, toggleTheme } from '$lib/utils/theme';
 
 	let darkMode = $state(false);
 	let modalOpen = $state(false);
@@ -26,13 +27,11 @@
 	];
 
 	onMount(() => {
-		const saved = document.documentElement.getAttribute('data-theme');
-		darkMode = saved === 'dark';
+		darkMode = currentTheme() === 'dark';
 	});
 
 	function toggleDarkMode() {
-		darkMode = !darkMode;
-		document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+		darkMode = toggleTheme() === 'dark';
 	}
 
 	// Toast icon paths (same as Toast.svelte)
@@ -486,7 +485,7 @@
 					{ type: 'error', bg: 'bg-error', message: 'Failed to send invitation email.' },
 					{ type: 'info', bg: 'bg-info', message: 'New comment on your event.' }
 				] as t}
-					<div class="px-4 py-3 rounded-md shadow-lg text-white text-sm {t.bg}">
+					<div class="px-4 py-3 rounded-md shadow-lg text-on-accent text-sm {t.bg}">
 						<div class="flex items-center gap-2">
 							<svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path

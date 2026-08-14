@@ -29,11 +29,13 @@
 		'inline-flex items-center justify-center font-medium rounded-md transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
 	const variantClasses: Record<string, string> = {
-		primary: 'bg-primary text-white hover:bg-primary-hover focus:ring-primary',
+		primary: 'bg-primary text-on-accent hover:bg-primary-hover focus:ring-primary',
 		secondary: 'bg-primary-light text-primary hover:bg-primary-lighter focus:ring-primary',
 		outline: 'border border-neutral-300 text-neutral-700 hover:bg-neutral-50 focus:ring-primary',
 		ghost: 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 focus:ring-primary',
-		danger: 'bg-error text-white hover:bg-red-700 focus:ring-error'
+		// Hover dims the fill rather than swapping in a fixed darker red, which
+		// would collide with the near-black on-accent text in dark mode.
+		danger: 'bg-error text-on-accent hover:opacity-90 focus:ring-error'
 	};
 
 	const sizeClasses: Record<string, string> = {

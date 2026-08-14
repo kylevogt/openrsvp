@@ -67,7 +67,7 @@ func TestSaveInviteCard(t *testing.T) {
 	assert.Equal(t, "You're Invited!", card.Heading)
 	assert.Equal(t, "#6366f1", card.PrimaryColor)
 	assert.Equal(t, "#f0abfc", card.SecondaryColor)
-	assert.Equal(t, "Inter", card.Font)
+	assert.Equal(t, defaultFont, card.Font)
 	assert.Equal(t, "{}", card.CustomData)
 }
 
@@ -99,7 +99,7 @@ func TestSaveInviteCardDefaults(t *testing.T) {
 	assert.Equal(t, "balloon-party", card.TemplateID)
 	assert.Equal(t, "#6366f1", card.PrimaryColor)
 	assert.Equal(t, "#f0abfc", card.SecondaryColor)
-	assert.Equal(t, "Inter", card.Font)
+	assert.Equal(t, defaultFont, card.Font)
 	assert.Equal(t, "{}", card.CustomData)
 }
 

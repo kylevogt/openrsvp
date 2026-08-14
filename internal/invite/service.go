@@ -25,6 +25,11 @@ var colorPattern = regexp.MustCompile(`^#[0-9a-fA-F]{3,8}$`)
 // rejected to defeat CSS-context injection via the --card-font variable.
 var fontPattern = regexp.MustCompile(`^[A-Za-z0-9 ,\-_'"]+$`)
 
+// defaultFont is the family used when an organizer has not picked one. It must
+// be a family the web app self-hosts (see web/src/app.css), otherwise guests
+// fall back to their browser's default serif.
+const defaultFont = "Plus Jakarta Sans"
+
 // sanitizeColor returns the trimmed color value when it matches the
 // allowlisted #hex format. Empty strings are returned as-is so that
 // the default-fill logic in Save() can substitute the template default.
@@ -182,7 +187,7 @@ func (s *Service) Save(ctx context.Context, eventID string, req SaveInviteReques
 		card.SecondaryColor = "#f0abfc"
 	}
 	if card.Font == "" {
-		card.Font = "Inter"
+		card.Font = defaultFont
 	}
 	if card.CustomData == "" {
 		card.CustomData = "{}"
@@ -258,7 +263,7 @@ func (s *Service) GetPreview(ctx context.Context, eventID string) (*InviteCard, 
 		Footer:         "",
 		PrimaryColor:   "#6366f1",
 		SecondaryColor: "#f0abfc",
-		Font:           "Inter",
+		Font:           defaultFont,
 		CustomData:     "{}",
 	}, nil
 }

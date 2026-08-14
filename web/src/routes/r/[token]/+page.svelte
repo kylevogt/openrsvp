@@ -271,7 +271,7 @@
 	<title>Manage Your RSVP{eventData ? ` — ${eventData.title}` : ''} — OpenRSVP</title>
 </svelte:head>
 
-<div class="min-h-screen px-4 py-8 sm:py-12" style="background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);">
+<div class="page-gradient min-h-screen px-4 py-8 sm:py-12">
 	<div class="max-w-lg mx-auto">
 		{#if loading}
 			<div class="flex items-center justify-center min-h-[60vh]">
@@ -485,7 +485,7 @@
 							<button
 								type="submit"
 								disabled={saving}
-								class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+								class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
 							>
 								{#if saving}
 									<span class="inline-flex items-center gap-2">
@@ -648,7 +648,7 @@
 							<button
 								type="submit"
 								disabled={sendingMessage}
-								class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+								class="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
 							>
 								{#if sendingMessage}
 									<span class="inline-flex items-center gap-2">
@@ -704,6 +704,8 @@
 </div>
 
 <style>
+	/* Theme tokens rather than fixed colors — these sit on a themed card, so
+	   hardcoded light greens/ambers read as light-mode holes in dark mode. */
 	.rsvp-option {
 		display: flex;
 		flex-direction: column;
@@ -711,40 +713,40 @@
 		justify-content: center;
 		padding: 0.75rem 0.5rem;
 		border-radius: 10px;
-		border: 2px solid #E7E5E4;
+		border: 2px solid var(--color-neutral-200);
 		cursor: pointer;
 		transition: all 0.15s ease;
-		color: #78716C;
+		color: var(--color-neutral-500);
 		text-align: center;
 	}
 	.rsvp-option:hover {
-		border-color: #D6D3D1;
-		background-color: #FAFAF9;
+		border-color: var(--color-neutral-300);
+		background-color: var(--color-neutral-100);
 	}
 	.rsvp-option-selected {
 		border-width: 2px;
 	}
 	.rsvp-option-attending {
-		border-color: #22c55e;
-		background-color: #f0fdf4;
-		color: #16a34a;
+		border-color: var(--color-success);
+		background-color: var(--color-success-light);
+		color: var(--color-success);
 	}
 	.rsvp-option-maybe {
-		border-color: #f59e0b;
-		background-color: #fffbeb;
-		color: #d97706;
+		border-color: var(--color-warning);
+		background-color: var(--color-warning-light);
+		color: var(--color-warning);
 	}
 	.rsvp-option-declined {
-		border-color: #ef4444;
-		background-color: #fef2f2;
-		color: #dc2626;
+		border-color: var(--color-error);
+		background-color: var(--color-error-light);
+		color: var(--color-error);
 	}
 	.rsvp-option-disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 	.rsvp-option-disabled:hover {
-		border-color: #E7E5E4;
+		border-color: var(--color-neutral-200);
 		background-color: transparent;
 	}
 </style>
