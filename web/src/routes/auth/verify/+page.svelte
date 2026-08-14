@@ -12,6 +12,18 @@
 	let verifying = $state(true);
 	let error = $state('');
 
+	// Strip the raw token from the URL/history so it does not linger in browser
+	// history. Users arrive here on a fresh document load, where SvelteKit's
+	// router may not be initialized yet and replaceState() throws -- fall back to
+	// the native history API so verification still goes ahead.
+	function stripToken() {
+		try {
+			replaceState('/auth/verify', {});
+		} catch {
+			history.replaceState(history.state, '', '/auth/verify');
+		}
+	}
+
 	onMount(async () => {
 		const token = $page.url.searchParams.get('token');
 
@@ -21,9 +33,7 @@
 			return;
 		}
 
-		// Strip the raw token from the URL/history before doing anything else,
-		// so it does not linger in browser history.
-		replaceState('/auth/verify', {});
+		stripToken();
 
 		try {
 			const result = await api.post<{ token: string; organizer: Organizer }>('/auth/verify', { token });
