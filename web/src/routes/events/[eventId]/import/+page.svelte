@@ -189,7 +189,7 @@
 						<span
 							class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium
 								{stepNumber > s.num
-									? 'bg-primary text-white'
+									? 'bg-primary text-on-accent'
 									: stepNumber === s.num
 										? 'bg-primary-lighter text-primary ring-2 ring-primary'
 										: 'bg-neutral-100 text-neutral-400'}"

@@ -32,7 +32,7 @@
 <button
 	type="button"
 	onclick={() => (open = true)}
-	class="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-hover transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+	class="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-on-accent shadow-lg hover:bg-primary-hover transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
 	aria-label="Send feedback"
 >
 	<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -91,7 +91,7 @@
 			<button
 				type="submit"
 				disabled={submitting || !message.trim()}
-				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-short ease-out"
+				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-accent hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-short ease-out"
 			>
 				{submitting ? 'Submitting...' : 'Submit'}
 			</button>

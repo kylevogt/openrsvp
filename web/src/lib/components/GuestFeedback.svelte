@@ -73,7 +73,7 @@
 			<button
 				type="button"
 				onclick={reset}
-				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover transition-colors"
+				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-accent hover:bg-primary-hover transition-colors"
 			>
 				Close
 			</button>
@@ -129,7 +129,7 @@
 				<button
 					type="submit"
 					disabled={submitting || !message.trim()}
-					class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-on-accent hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 				>
 					{submitting ? 'Sending...' : 'Send Feedback'}
 				</button>

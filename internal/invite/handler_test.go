@@ -174,7 +174,7 @@ func TestHandleSaveInvite_Success(t *testing.T) {
 	// Check defaults are applied.
 	assert.Equal(t, "#6366f1", data["primaryColor"])
 	assert.Equal(t, "#f0abfc", data["secondaryColor"])
-	assert.Equal(t, "Inter", data["font"])
+	assert.Equal(t, "Plus Jakarta Sans", data["font"])
 }
 
 func TestHandleSaveInvite_InvalidJSON(t *testing.T) {

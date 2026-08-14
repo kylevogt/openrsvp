@@ -2,23 +2,17 @@
 	import { onMount } from 'svelte';
 	import { currentUser, isAdmin } from '$lib/stores/auth';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { currentTheme, toggleTheme as flipTheme } from '$lib/utils/theme';
 
 	let mobileMenuOpen = $state(false);
 	let isDark = $state(false);
 
 	onMount(() => {
-		isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+		isDark = currentTheme() === 'dark';
 	});
 
 	function toggleTheme() {
-		isDark = !isDark;
-		if (isDark) {
-			document.documentElement.setAttribute('data-theme', 'dark');
-			localStorage.setItem('theme', 'dark');
-		} else {
-			document.documentElement.removeAttribute('data-theme');
-			localStorage.setItem('theme', 'light');
-		}
+		isDark = flipTheme() === 'dark';
 	}
 </script>
 

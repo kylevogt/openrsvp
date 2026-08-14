@@ -63,6 +63,32 @@
 
 	const isDarkTemplate = $derived(templateId === 'chalkboard');
 
+	// Map a saved font choice onto a complete font stack. Stored values are bare
+	// family names ("Inter"), which render as the browser's default serif when the
+	// family isn't installed — the app self-hosts Satoshi / Plus Jakarta Sans /
+	// Geist Mono rather than Inter, so every value needs an explicit fallback.
+	const FONT_STACKS: Record<string, string> = {
+		Satoshi: "'Satoshi', ui-sans-serif, system-ui, sans-serif",
+		'Plus Jakarta Sans': "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif",
+		'Geist Mono': "'Geist Mono', ui-monospace, 'SF Mono', monospace",
+		Georgia: "Georgia, 'Iowan Old Style', 'Times New Roman', serif",
+		'Courier New': "'Courier New', ui-monospace, monospace",
+		'Comic Sans MS': "'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive",
+		Arial: "Arial, Helvetica, ui-sans-serif, sans-serif",
+		// Legacy value from before the app settled on self-hosted fonts.
+		Inter: "'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif"
+	};
+
+	function fontStack(name: string): string {
+		if (!name) return 'var(--font-body)';
+		if (FONT_STACKS[name]) return FONT_STACKS[name];
+		// Unknown family (older rows, hand-edited data): quote it and keep a fallback.
+		const safe = name.replace(/[^A-Za-z0-9 _-]/g, '');
+		return safe ? `'${safe}', ui-sans-serif, system-ui, sans-serif` : 'var(--font-body)';
+	}
+
+	const cardFont = $derived(fontStack(font));
+
 	const templateConfig = $derived.by(() => {
 		switch (templateId) {
 			case 'balloon-party':
@@ -70,7 +96,7 @@
 					wrapperClass: 'balloon-party',
 					decorBefore: '\u{1F388}',
 					decorAfter: '\u{1F389}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#ea580c'}22, ${secondaryColor || '#d97706'}22)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#ea580c'}22, ${secondaryColor || '#d97706'}22)`,
 					borderColor: primaryColor || '#ea580c',
 					accentColor: secondaryColor || '#d97706'
 				};
@@ -79,7 +105,7 @@
 					wrapperClass: 'confetti',
 					decorBefore: '\u{1F38A}',
 					decorAfter: '\u{1F38A}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#E54666'}11, ${secondaryColor || '#f472b6'}11, ${primaryColor || '#E54666'}11)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#E54666'}11, ${secondaryColor || '#f472b6'}11, ${primaryColor || '#E54666'}11)`,
 					borderColor: primaryColor || '#E54666',
 					accentColor: secondaryColor || '#f472b6'
 				};
@@ -88,7 +114,7 @@
 					wrapperClass: 'unicorn-magic',
 					decorBefore: '\u{2728}',
 					decorAfter: '\u{1F984}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#a855f7'}22, ${secondaryColor || '#ec4899'}22)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#a855f7'}22, ${secondaryColor || '#ec4899'}22)`,
 					borderColor: primaryColor || '#a855f7',
 					accentColor: secondaryColor || '#ec4899'
 				};
@@ -97,7 +123,7 @@
 					wrapperClass: 'superhero',
 					decorBefore: '\u{26A1}',
 					decorAfter: '\u{1F4A5}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#ef4444'}22, ${secondaryColor || '#3b82f6'}22)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#ef4444'}22, ${secondaryColor || '#3b82f6'}22)`,
 					borderColor: primaryColor || '#ef4444',
 					accentColor: secondaryColor || '#3b82f6'
 				};
@@ -106,7 +132,7 @@
 					wrapperClass: 'garden-picnic',
 					decorBefore: '\u{1F33F}',
 					decorAfter: '\u{1F338}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#22c55e'}22, ${secondaryColor || '#a3e635'}22)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#22c55e'}22, ${secondaryColor || '#a3e635'}22)`,
 					borderColor: primaryColor || '#22c55e',
 					accentColor: secondaryColor || '#a3e635'
 				};
@@ -115,7 +141,7 @@
 					wrapperClass: 'elegant-affair',
 					decorBefore: '\u{1F48E}',
 					decorAfter: '\u{1F48E}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#E54666'}08, ${secondaryColor || '#d4a574'}08)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#E54666'}08, ${secondaryColor || '#d4a574'}08)`,
 					borderColor: primaryColor || '#E54666',
 					accentColor: secondaryColor || '#d4a574'
 				};
@@ -124,7 +150,7 @@
 					wrapperClass: 'clean-minimal',
 					decorBefore: '',
 					decorAfter: '',
-					bgGradient: '#ffffff',
+					bgImage: 'none',
 					borderColor: primaryColor || '#E7E5E4',
 					accentColor: secondaryColor || '#E54666'
 				};
@@ -133,7 +159,7 @@
 					wrapperClass: 'tropical-vibes',
 					decorBefore: '\u{1F334}',
 					decorAfter: '\u{1F334}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#f97316'}15, ${secondaryColor || '#fbbf24'}15)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#f97316'}15, ${secondaryColor || '#fbbf24'}15)`,
 					borderColor: primaryColor || '#f97316',
 					accentColor: secondaryColor || '#fbbf24'
 				};
@@ -142,7 +168,7 @@
 					wrapperClass: 'vintage-retro',
 					decorBefore: '\u{1F4F7}',
 					decorAfter: '\u{1F4F7}',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#92400e'}0a, ${secondaryColor || '#d97706'}0a)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#92400e'}0a, ${secondaryColor || '#d97706'}0a)`,
 					borderColor: primaryColor || '#92400e',
 					accentColor: secondaryColor || '#d97706'
 				};
@@ -151,7 +177,7 @@
 					wrapperClass: 'chalkboard',
 					decorBefore: '\u{270D}',
 					decorAfter: '\u{270D}',
-					bgGradient: '#1C1917',
+					bgImage: 'none',
 					borderColor: primaryColor || '#44403C',
 					accentColor: secondaryColor || '#A8A29E'
 				};
@@ -160,7 +186,7 @@
 					wrapperClass: 'default-template',
 					decorBefore: '',
 					decorAfter: '',
-					bgGradient: `linear-gradient(135deg, ${primaryColor || '#E54666'}22, ${secondaryColor || '#f472b6'}22)`,
+					bgImage: `linear-gradient(135deg, ${primaryColor || '#E54666'}22, ${secondaryColor || '#f472b6'}22)`,
 					borderColor: primaryColor || '#E54666',
 					accentColor: secondaryColor || '#f472b6'
 				};
@@ -192,10 +218,11 @@
 	style="
 		--primary: {primaryColor || '#E54666'};
 		--secondary: {secondaryColor || '#f472b6'};
-		--card-bg: {templateConfig.bgGradient};
+		--card-bg: {templateConfig.bgImage};
+		--card-base: {isDarkTemplate ? '#1C1917' : '#FFFFFF'};
 		--border-color: {templateConfig.borderColor};
 		--accent-color: {templateConfig.accentColor};
-		--card-font: {font || 'inherit'};
+		--card-font: {cardFont};
 	"
 >
 	<!-- Background image with readability overlay -->
@@ -285,7 +312,7 @@
 		{#if templateConfig.decorBefore}
 			<span class="decor-emoji decor-left" aria-hidden="true">{templateConfig.decorBefore}</span>
 		{/if}
-		<h1 class="card-heading" style="font-family: {font || 'inherit'}">
+		<h1 class="card-heading" style="font-family: {cardFont}">
 			{heading || eventTitle}
 		</h1>
 		{#if templateConfig.decorAfter}
@@ -333,10 +360,19 @@
 </div>
 
 <style>
+	/* The invite card is the organizer's artwork: it renders the same way in the
+	   app, in the guest page and in email, so it carries its own fixed palette
+	   instead of the app's light/dark theme tokens. Template tints are
+	   translucent, so an opaque base keeps them off the page background. */
 	.invite-card {
+		--ink-strong: #1C1917;
+		--ink: #44403C;
+		--ink-muted: #78716C;
+
 		position: relative;
 		overflow: hidden;
-		background: var(--card-bg);
+		background-color: var(--card-base);
+		background-image: var(--card-bg);
 		border: 2px solid var(--border-color);
 		border-radius: 1.5rem;
 		padding: 2.5rem 2rem;
@@ -418,7 +454,7 @@
 	.unicorn-magic {
 		border-color: var(--primary);
 		border-width: 2px;
-		background: linear-gradient(135deg, #a855f722, #ec489922, #c084fc22);
+		background-image: linear-gradient(135deg, #a855f722, #ec489922, #c084fc22);
 		box-shadow: 0 0 30px #a855f733, 0 0 60px #ec489911;
 	}
 	.unicorn-magic .card-heading {
@@ -453,7 +489,7 @@
 		border-color: var(--primary);
 		border-radius: 0.5rem;
 		box-shadow: 4px 4px 0 var(--secondary);
-		background: linear-gradient(135deg, #ef444411, #3b82f611);
+		background-image: linear-gradient(135deg, #ef444411, #3b82f611);
 	}
 	.superhero .card-heading {
 		font-size: 2.25rem;
@@ -472,7 +508,7 @@
 		border-color: var(--primary);
 		border-width: 2px;
 		border-radius: 2rem;
-		background: linear-gradient(180deg, #22c55e0d, #a3e63511, #22c55e0d);
+		background-image: linear-gradient(180deg, #22c55e0d, #a3e63511, #22c55e0d);
 	}
 	.garden-picnic .card-heading {
 		font-size: 1.875rem;
@@ -526,22 +562,22 @@
 		border-width: 1px;
 		border-color: var(--border-color);
 		border-radius: 0.75rem;
-		background: #ffffff;
+		background-color: #FFFFFF;
 	}
 	.clean-minimal .card-heading {
 		font-size: 1.75rem;
 		font-weight: 600;
-		color: var(--color-neutral-900);
+		color: var(--ink-strong);
 		font-family: var(--font-display);
 	}
 	.clean-minimal .event-title {
-		color: var(--color-neutral-700);
+		color: var(--ink);
 	}
 	.clean-minimal .detail-row {
-		color: var(--color-neutral-500);
+		color: var(--ink-muted);
 	}
 	.clean-minimal .card-body p {
-		color: var(--color-neutral-700);
+		color: var(--ink);
 	}
 
 	/* Tropical Vibes */
@@ -603,35 +639,26 @@
 
 	/* Chalkboard */
 	.chalkboard {
+		--ink-strong: #F5F5F4;
+		--ink: #E7E5E4;
+		--ink-muted: #A8A29E;
+
 		border-style: dashed;
 		border-width: 2px;
 		border-color: var(--border-color);
 		border-radius: 0.5rem;
-		background: var(--color-neutral-900);
 	}
 	.chalkboard .card-heading {
 		font-size: 2rem;
 		font-weight: 700;
-		color: var(--color-neutral-100);
+		color: var(--ink-strong);
 		font-family: var(--font-display);
 	}
 	.chalkboard .decor-emoji {
 		font-size: 1.25rem;
 	}
-	.chalkboard .event-title {
-		color: var(--color-neutral-300);
-	}
-	.chalkboard .detail-row {
-		color: var(--color-neutral-400);
-	}
 	.chalkboard .detail-icon {
-		color: var(--color-neutral-400);
-	}
-	.chalkboard .card-body p {
-		color: var(--color-neutral-200);
-	}
-	.chalkboard .card-footer p {
-		color: var(--color-neutral-400);
+		color: var(--ink-muted);
 	}
 	.chalk-dots {
 		position: absolute;
@@ -641,7 +668,7 @@
 	.chalk-dot {
 		position: absolute;
 		border-radius: 50%;
-		background: var(--color-neutral-50);
+		background: #FAFAF9;
 	}
 
 	/* Default template */
@@ -685,7 +712,7 @@
 	.event-title {
 		font-size: 1.125rem;
 		font-weight: 600;
-		color: var(--color-neutral-700);
+		color: var(--ink);
 		margin: 0;
 	}
 
@@ -694,7 +721,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.5rem;
-		color: var(--color-neutral-700);
+		color: var(--ink);
 		font-size: 0.9375rem;
 	}
 
@@ -715,7 +742,7 @@
 	}
 
 	.card-body p {
-		color: var(--color-neutral-700);
+		color: var(--ink);
 		font-size: 1rem;
 		line-height: 1.6;
 		margin: 0;
@@ -728,7 +755,7 @@
 	}
 
 	.card-footer p {
-		color: var(--color-neutral-500);
+		color: var(--ink-muted);
 		font-size: 0.875rem;
 		font-style: italic;
 		margin: 0;

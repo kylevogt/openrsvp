@@ -77,7 +77,7 @@
 			<div class="flex flex-col sm:flex-row items-center justify-center gap-3">
 				<a
 					href="/"
-					class="group inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white hover:bg-primary-hover transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
+					class="group inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
 				>
 					<svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

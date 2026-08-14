@@ -765,7 +765,7 @@
 							<button
 								type="button"
 								class="px-3 py-1 rounded-full text-xs font-medium transition-colors {activeFilter === filter
-									? 'bg-primary text-white'
+									? 'bg-primary text-on-accent'
 									: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}"
 								onclick={() => (activeFilter = filter)}
 							>
@@ -863,7 +863,7 @@
 							<svg class="h-4 w-4 text-neutral-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
 							</svg>
-							<span class="invisible group-hover:visible absolute left-6 top-0 z-10 w-64 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white shadow-lg">
+							<span class="invisible group-hover:visible absolute left-6 top-0 z-10 w-64 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-neutral-50 shadow-lg">
 								Co-hosts can edit event details, manage guests, and send messages. Only the event owner can delete the event or manage co-hosts.
 							</span>
 						</span>

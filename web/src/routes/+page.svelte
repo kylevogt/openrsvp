@@ -23,7 +23,7 @@
 				{#if $isAuthenticated}
 					<a
 						href="/events"
-						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors shadow-sm"
+						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors shadow-sm"
 					>
 						Dashboard
 					</a>
@@ -36,7 +36,7 @@
 					</a>
 					<a
 						href="/auth/login"
-						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors shadow-sm"
+						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-on-accent hover:bg-primary-hover transition-colors shadow-sm"
 					>
 						Get Started
 					</a>
@@ -77,7 +77,7 @@
 				<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
 					<a
 						href="/auth/login"
-						class="group inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-white hover:bg-primary-hover transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
+						class="group inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-on-accent hover:bg-primary-hover transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
 					>
 						Create Your First Event
 						<svg class="w-5 h-5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -208,7 +208,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
 					<!-- Step 1 -->
 					<div class="relative text-center">
-						<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary text-white text-2xl font-bold mb-6 shadow-lg shadow-primary/30">
+						<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary text-on-accent text-2xl font-bold mb-6 shadow-lg shadow-primary/30">
 							1
 						</div>
 						<h3 class="text-xl font-semibold text-neutral-900 mb-3">Create Your Event</h3>
@@ -269,7 +269,7 @@
 				</p>
 				<a
 					href="/auth/login"
-					class="inline-flex items-center gap-2 rounded-lg bg-surface px-8 py-3.5 text-lg font-semibold text-primary hover:bg-primary-lighter transition-colors shadow-lg"
+					class="inline-flex items-center gap-2 rounded-lg bg-white px-8 py-3.5 text-lg font-semibold text-[#E54666] hover:bg-rose-50 transition-colors shadow-lg"
 				>
 					Get Started Free
 					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -281,7 +281,7 @@
 	</main>
 
 	<!-- Footer -->
-	<footer class="bg-neutral-900 text-neutral-400 py-12">
+	<footer class="bg-stone-900 text-stone-400 py-12">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<div class="flex flex-col sm:flex-row items-center justify-between gap-6">
 				<div class="flex items-center gap-3">

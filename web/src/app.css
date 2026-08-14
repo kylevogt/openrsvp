@@ -35,67 +35,24 @@
   font-display: swap;
 }
 
-/* Plus Jakarta Sans — Body font */
+/* Plus Jakarta Sans — Body font.
+   Shipped as a variable font (wght 200–800), so a single declaration per style
+   covers every weight we use. Declaring it once per weight downloaded the same
+   file six times and pinned every weight to the default 400 instance. */
 @font-face {
   font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-300.woff2') format('woff2');
-  font-weight: 300;
+  src: url('/fonts/plus-jakarta-sans-variable.woff2') format('woff2-variations'),
+       url('/fonts/plus-jakarta-sans-variable.woff2') format('woff2');
+  font-weight: 200 800;
   font-style: normal;
   font-display: swap;
 }
 
 @font-face {
   font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-500.woff2') format('woff2');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-600.woff2') format('woff2');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-700.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-800.woff2') format('woff2');
-  font-weight: 800;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-italic-400.woff2') format('woff2');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Plus Jakarta Sans';
-  src: url('/fonts/plus-jakarta-sans-italic-500.woff2') format('woff2');
-  font-weight: 500;
+  src: url('/fonts/plus-jakarta-sans-italic-variable.woff2') format('woff2-variations'),
+       url('/fonts/plus-jakarta-sans-italic-variable.woff2') format('woff2');
+  font-weight: 200 800;
   font-style: italic;
   font-display: swap;
 }
@@ -144,6 +101,11 @@
   --color-surface: #FFFFFF;
   --color-surface-raised: #FFFFFF;
 
+  /* Text drawn on top of a solid accent fill (primary buttons, toasts, badges).
+     Dark mode brightens the accents, so white-on-accent stops being legible
+     there and this flips to near-black. */
+  --color-on-accent: #FFFFFF;
+
   /* Colors - Neutrals (stone family - warm grays) */
   --color-neutral-50: #FAFAF9;
   --color-neutral-100: #F5F5F4;
@@ -185,8 +147,20 @@
   --duration-long: 500ms;
 }
 
+/* ===== Light Mode (non-color tokens that dark mode overrides) ===== */
+:root {
+  color-scheme: light;
+
+  /* Soft gradient wash behind the guest-facing pages (invite, RSVP, unsubscribe) */
+  --page-gradient: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);
+}
+
 /* ===== Dark Mode ===== */
 [data-theme="dark"] {
+  color-scheme: dark;
+
+  --page-gradient: linear-gradient(135deg, #0C0A09 0%, #1A1114 50%, #241318 100%);
+
   --color-primary: #F06B85;
   --color-primary-hover: #E54666;
   --color-primary-light: #3D1A23;
@@ -208,6 +182,8 @@
   --color-surface: #1C1917;
   --color-surface-raised: #292524;
 
+  --color-on-accent: #0C0A09;
+
   --color-neutral-50: #0C0A09;
   --color-neutral-100: #1C1917;
   --color-neutral-200: #292524;
@@ -222,10 +198,20 @@
 }
 
 /* ===== Base Styles ===== */
+html {
+  background-color: var(--color-neutral-50);
+}
+
 body {
   font-family: var(--font-body);
   color: var(--color-neutral-900);
   background-color: var(--color-neutral-50);
+}
+
+/* Full-bleed wash used by the guest-facing pages. Follows the active theme so
+   the page never mixes a light backdrop with dark cards (or vice versa). */
+.page-gradient {
+  background: var(--page-gradient);
 }
 
 /* Focus ring utility */
