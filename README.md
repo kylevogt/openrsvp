@@ -448,6 +448,15 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.8.3 (2026-08-14)
+
+**Fixes:**
+- **Guest pages no longer render light and dark mode at the same time.** The invite, RSVP and unsubscribe pages painted a hardcoded light gradient behind cards and text that follow the theme tokens, so a guest in dark mode got a light page carrying black cards. The invite card was worse: its paper is a translucent tint of the organizer's colors, but its text used the app's neutral scale, which inverts — the event title rendered near-white on light paper and was effectively invisible. The page wash now comes from a themed `--page-gradient`, and the invite card is theme-independent: it carries its own ink palette over an opaque paper base, so it renders identically in the app, on the guest page and in email. Chalkboard and Clean Minimal, both unreadable in dark mode, are fixed by the same change
+- **Invite cards rendered in the browser's default serif instead of the chosen font.** Font choices were stored and emitted as bare family names with no fallback, and the default was `Inter`, which the app does not self-host — so an unmatched family with no fallback fell through to Times. Choices now map to complete stacks, the picker offers the three self-hosted families (Satoshi, Plus Jakarta Sans, Geist Mono) alongside the web-safe ones, and the stored default is `Plus Jakarta Sans`. Existing `Inter` rows map onto it rather than showing a blank selection in the designer
+- **Plus Jakarta Sans is a variable font that was being downloaded six times.** It was declared once per weight (300–800) against six byte-identical copies of the same file, which both wasted ~135 KB of transfer and made the declared weights unreliable. It is now declared once per style across the 200–800 range, and the body font is preloaded
+- Text on solid accent fills (primary buttons, toasts) was white against the brighter dark-mode accents, around 2:1 contrast. A new `--color-on-accent` token flips it to near-black in dark mode
+- `color-scheme` and `<meta name="theme-color">` now follow the active theme, and the pre-hydration background is painted from the resolved theme — so dark mode no longer flashes light on load or shows light browser chrome on mobile. Theme switching is centralized in `$lib/utils/theme` so the navbar and design-gallery toggles keep the attribute, the stored preference and the meta tag in sync
+
 ### v1.8.2 (2026-08-13)
 
 **Fixes:**
