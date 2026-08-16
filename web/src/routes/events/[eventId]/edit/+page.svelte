@@ -38,6 +38,7 @@
 	let showRetention = $state(false);
 	let attendingHeadcount = $state(0);
 	let waitlistEnabled = $state(false);
+	let dietaryNotesEnabled = $state(true);
 
 	const capacityWarning = $derived(
 		maxCapacity && parseInt(maxCapacity) > 0 && attendingHeadcount > parseInt(maxCapacity)
@@ -85,6 +86,7 @@
 			retentionDays = String(e.retentionDays);
 			showRetention = e.retentionDays !== 30;
 			waitlistEnabled = e.waitlistEnabled ?? false;
+			dietaryNotesEnabled = e.dietaryNotesEnabled ?? true;
 			attendingHeadcount = statsResult.data.attendingHeadcount;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
@@ -128,6 +130,7 @@
 				contactRequirement,
 				showHeadcount,
 				showGuestList,
+				dietaryNotesEnabled,
 				retentionDays: parseInt(retentionDays)
 			};
 			if (endDate) body.endDate = datetimeLocalToUTC(endDate, timezone);
@@ -232,6 +235,18 @@
 						bind:value={contactRequirement}
 						options={filteredContactOptions}
 					/>
+
+					<label class="flex items-center gap-3 cursor-pointer">
+						<input
+							type="checkbox"
+							bind:checked={dietaryNotesEnabled}
+							class="rounded border-neutral-300 text-primary focus:ring-primary/40"
+						/>
+						<div>
+							<span class="text-sm text-neutral-700">Ask for dietary notes</span>
+							<p class="text-xs text-neutral-400">Guests can share allergies or dietary requirements when they RSVP. Turning this off hides the question but keeps any notes already collected.</p>
+						</div>
+					</label>
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">Guest Visibility</legend>

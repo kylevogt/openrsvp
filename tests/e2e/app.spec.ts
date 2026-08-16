@@ -193,6 +193,31 @@ test.describe.serial('OpenRSVP E2E', () => {
 		).toBeVisible({ timeout: 10000 });
 	});
 
+	test('dietaryNotesEnabled toggle is respected on the invite page', async ({ page }) => {
+		// The shared test event leaves the setting at its default (on).
+		await page.goto(`/i/${testShareToken}`);
+		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
+		await expect(page.locator('#rsvp-dietary')).toBeVisible();
+
+		// An event created with the question off must not render the field.
+		const offEvent = await createEventViaAPI(sessionToken, { dietaryNotesEnabled: false });
+		await page.goto(`/i/${(offEvent as any).shareToken}`);
+		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
+		await expect(page.locator('#rsvp-dietary')).toHaveCount(0);
+
+		// Turning it back on restores the field.
+		await fetch(`http://localhost:8091/api/v1/events/${(offEvent as any).id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${sessionToken}`
+			},
+			body: JSON.stringify({ dietaryNotesEnabled: true })
+		});
+		await page.goto(`/i/${(offEvent as any).shareToken}`);
+		await expect(page.locator('#rsvp-dietary')).toBeVisible({ timeout: 10000 });
+	});
+
 	test('invalid share token shows error', async ({ page }) => {
 		await page.goto('/i/invalidtoken123');
 		await expect(

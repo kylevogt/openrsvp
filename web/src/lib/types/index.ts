@@ -27,6 +27,7 @@ export interface Event {
 	maxCapacity?: number;
 	waitlistEnabled: boolean;
 	commentsEnabled: boolean;
+	dietaryNotesEnabled: boolean;
 	seriesId?: string;
 	seriesIndex?: number;
 	seriesOverride?: boolean;
@@ -138,6 +139,7 @@ export interface PublicEvent {
 	atCapacity: boolean;
 	waitlistEnabled: boolean;
 	commentsEnabled: boolean;
+	dietaryNotesEnabled: boolean;
 }
 
 export interface PublicAttendance {

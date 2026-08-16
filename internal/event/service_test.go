@@ -482,6 +482,83 @@ func TestDuplicateEventCopiesVisibility(t *testing.T) {
 	assert.True(t, dup.ShowGuestList)
 }
 
+func TestCreateEventDefaultsDietaryNotesEnabled(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+	assert.True(t, ev.DietaryNotesEnabled)
+
+	found, err := svc.GetByID(ctx, ev.ID)
+	require.NoError(t, err)
+	assert.True(t, found.DietaryNotesEnabled)
+}
+
+func TestCreateEventWithDietaryNotesDisabled(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:               "Party",
+		EventDate:           "2026-06-15T14:00",
+		DietaryNotesEnabled: boolPtr(false),
+	})
+	require.NoError(t, err)
+	assert.False(t, ev.DietaryNotesEnabled)
+
+	found, err := svc.GetByID(ctx, ev.ID)
+	require.NoError(t, err)
+	assert.False(t, found.DietaryNotesEnabled)
+}
+
+func TestUpdateEventDietaryNotesEnabled(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+
+	// Omitting the field leaves it untouched.
+	unchanged, err := svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{ShowHeadcount: boolPtr(true)})
+	require.NoError(t, err)
+	assert.True(t, unchanged.DietaryNotesEnabled)
+
+	off, err := svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{DietaryNotesEnabled: boolPtr(false)})
+	require.NoError(t, err)
+	assert.False(t, off.DietaryNotesEnabled)
+
+	on, err := svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{DietaryNotesEnabled: boolPtr(true)})
+	require.NoError(t, err)
+	assert.True(t, on.DietaryNotesEnabled)
+}
+
+func TestDuplicateEventCopiesDietaryNotesEnabled(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	created, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:               "Party",
+		EventDate:           "2026-06-15T14:00",
+		DietaryNotesEnabled: boolPtr(false),
+	})
+	require.NoError(t, err)
+
+	dup, err := svc.Duplicate(ctx, created.ID, org.ID)
+	require.NoError(t, err)
+	assert.False(t, dup.DietaryNotesEnabled)
+}
+
 func TestDeleteEvent(t *testing.T) {
 	svc, authStore := setupEvent(t)
 	org := createOrganizer(t, authStore)

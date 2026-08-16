@@ -348,6 +348,12 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 		return nil, fmt.Errorf("event is not accepting RSVPs")
 	}
 
+	// The organizer can turn the dietary notes question off for this event. Drop
+	// anything a client sends anyway rather than rejecting the whole RSVP.
+	if !ev.DietaryNotesEnabled {
+		req.DietaryNotes = ""
+	}
+
 	// Check RSVP deadline.
 	if ev.RSVPDeadline != nil && time.Now().UTC().After(*ev.RSVPDeadline) {
 		return nil, validationErrorf("RSVPs are closed")
@@ -430,7 +436,11 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 		// Update the existing RSVP.
 		existing.Name = req.Name
 		existing.RSVPStatus = req.RSVPStatus
-		existing.DietaryNotes = req.DietaryNotes
+		if ev.DietaryNotesEnabled {
+			// While the question is off, leave any previously collected notes
+			// alone so toggling the setting back on doesn't lose them.
+			existing.DietaryNotes = req.DietaryNotes
+		}
 		existing.PlusOnes = req.PlusOnes
 		existing.ContactMethod = req.ContactMethod
 		if req.Email != nil {
@@ -718,7 +728,9 @@ func (s *Service) UpdateByToken(ctx context.Context, rsvpToken string, req Updat
 		// Validation already done above — only attending/maybe/declined allowed.
 		a.RSVPStatus = *req.RSVPStatus
 	}
-	if req.DietaryNotes != nil {
+	// While the question is off, ignore the field entirely: any notes already on
+	// the attendee stay put in case the organizer turns it back on.
+	if req.DietaryNotes != nil && ev.DietaryNotesEnabled {
 		a.DietaryNotes = *req.DietaryNotes
 	}
 	if req.PlusOnes != nil {

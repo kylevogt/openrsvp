@@ -253,6 +253,69 @@ func TestUpdateRSVPByToken(t *testing.T) {
 	assert.Equal(t, 0, declined.PlusOnes)
 }
 
+// createPublishedEventWithoutDietaryNotes builds a published event that has the
+// dietary notes question turned off.
+func createPublishedEventWithoutDietaryNotes(t *testing.T, eventSvc *event.Service, orgID string) *event.Event {
+	t.Helper()
+	ctx := context.Background()
+	disabled := false
+	ev, err := eventSvc.Create(ctx, orgID, event.CreateEventRequest{
+		Title: "Test Event", EventDate: "2026-06-15T14:00", DietaryNotesEnabled: &disabled,
+	})
+	require.NoError(t, err)
+	published, err := eventSvc.Publish(ctx, ev.ID, orgID)
+	require.NoError(t, err)
+	return published
+}
+
+func TestSubmitRSVPIgnoresDietaryNotesWhenDisabled(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEventWithoutDietaryNotes(t, eventSvc, org.ID)
+
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name:         "Alice",
+		Email:        strPtr("alice@example.com"),
+		RSVPStatus:   "attending",
+		DietaryNotes: "Vegan",
+	})
+	require.NoError(t, err)
+	assert.Empty(t, attendee.DietaryNotes)
+}
+
+func TestDisablingDietaryNotesPreservesExistingNotes(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending", DietaryNotes: "Vegan",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "Vegan", attendee.DietaryNotes)
+
+	_, err = eventSvc.Update(ctx, ev.ID, org.ID, event.UpdateEventRequest{DietaryNotesEnabled: boolPtr(false)})
+	require.NoError(t, err)
+
+	// Re-submitting and self-editing must both leave the stored notes alone.
+	resubmitted, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "maybe",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "Vegan", resubmitted.DietaryNotes)
+
+	cleared := ""
+	updated, err := svc.UpdateByToken(ctx, attendee.RSVPToken, UpdateRSVPRequest{DietaryNotes: &cleared})
+	require.NoError(t, err)
+	assert.Equal(t, "Vegan", updated.DietaryNotes)
+}
+
 func TestListAttendeesByEvent(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	ctx := context.Background()

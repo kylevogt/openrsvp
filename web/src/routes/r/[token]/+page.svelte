@@ -123,7 +123,7 @@
 			const payload: Record<string, unknown> = {
 				name: editName.trim(),
 				rsvpStatus: editStatus,
-				dietaryNotes: editDietary.trim() || undefined,
+				dietaryNotes: eventData?.dietaryNotesEnabled ? editDietary.trim() || undefined : undefined,
 				plusOnes: editPlusOnes
 			};
 			if (Object.keys(editAnswers).length > 0) {
@@ -429,19 +429,21 @@
 							</div>
 						</fieldset>
 
-						<!-- Dietary Notes -->
-						<div>
-							<label for="edit-dietary" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								Dietary Notes <span class="text-neutral-400 font-normal">(optional)</span>
-							</label>
-							<textarea
-								id="edit-dietary"
-								bind:value={editDietary}
-								placeholder="Any allergies or dietary requirements?"
-								rows="2"
-								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
-							></textarea>
-						</div>
+						{#if eventData.dietaryNotesEnabled}
+							<!-- Dietary Notes -->
+							<div>
+								<label for="edit-dietary" class="block text-sm font-medium text-neutral-700 mb-1.5">
+									Dietary Notes <span class="text-neutral-400 font-normal">(optional)</span>
+								</label>
+								<textarea
+									id="edit-dietary"
+									bind:value={editDietary}
+									placeholder="Any allergies or dietary requirements?"
+									rows="2"
+									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
+								></textarea>
+							</div>
+						{/if}
 
 						<!-- Plus Ones -->
 						<div>
@@ -520,7 +522,7 @@
 								{statusLabel(attendee.rsvpStatus)}
 							</span>
 						</div>
-						{#if attendee.dietaryNotes}
+						{#if eventData.dietaryNotesEnabled && attendee.dietaryNotes}
 							<div class="flex items-center justify-between">
 								<span class="text-sm text-neutral-500">Dietary Notes</span>
 								<span class="text-sm font-medium text-neutral-900">{attendee.dietaryNotes}</span>
