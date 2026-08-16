@@ -475,6 +475,16 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.9.0 (2026-08-16)
+
+**Features:**
+- **The dietary notes question is now optional per event.** It was rendered on every RSVP form, so events with no catering — a talk, a park meetup — still asked every guest for allergy information nobody needed. An "Ask for dietary notes" checkbox in the create wizard and the edit form now controls it, defaulting to on so existing events and organizers who ignore it see no change. With it off the question is hidden on the public invite page, the guest self-service page and the organizer guest list, and a `dietaryNotes` value posted by a client is ignored rather than rejected. Notes already collected are preserved, so turning the setting off and back on loses nothing, and the CSV export column stays unconditional to keep the export schema stable
+
+**Tests & CI:**
+- **The Playwright end-to-end suite only ran on one contributor's machine.** It extracted magic link tokens by shelling out to `docker compose logs` with the working directory pinned to an absolute path outside the repository, and the base URL was hardcoded across four files. Token retrieval is now strategy-based — `E2E_SERVER_LOG` reads the server's log file directly, otherwise it still falls back to Docker, but from a repository root located by walking up to `go.mod` — and the base URL comes from `E2E_BASE_URL`, shared from `helpers.ts` so the specs and the Playwright config cannot drift apart
+- `make e2e` builds the binary, starts it on a scratch SQLite database, runs the suite and tears it down again, with no Docker required. It refuses to start when the port is already served, so a stale process cannot silently make the suite test an old build
+- The end-to-end suite now runs in CI as a blocking gate. When it fails, the server log and Playwright traces are uploaded as artifacts, so the suite cannot quietly drift out of working order again
+
 ### v1.8.3 (2026-08-14)
 
 **Fixes:**
