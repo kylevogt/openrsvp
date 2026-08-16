@@ -23,12 +23,23 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PORT="${E2E_PORT:-8091}"
+ARTIFACT_DIR="${E2E_ARTIFACT_DIR:-$ROOT/tests/e2e/test-results}"
 
 WORKDIR="$(mktemp -d)"
 SERVER_LOG="$WORKDIR/server.log"
 SERVER_PID=""
 
 cleanup() {
+  local status=$?
+
+  # The workdir is about to go away, so keep the server log when something went
+  # wrong — on CI it is the only record of what the server was doing.
+  if [[ $status -ne 0 && -s "$SERVER_LOG" ]]; then
+    mkdir -p "$ARTIFACT_DIR"
+    cp "$SERVER_LOG" "$ARTIFACT_DIR/server.log"
+    echo "==> Server log saved to $ARTIFACT_DIR/server.log"
+  fi
+
   if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
     kill "$SERVER_PID" 2>/dev/null || true
     for _ in $(seq 1 20); do
