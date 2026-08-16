@@ -1,0 +1,1 @@
+ALTER TABLE events ADD COLUMN dietary_notes_enabled INTEGER NOT NULL DEFAULT 1;

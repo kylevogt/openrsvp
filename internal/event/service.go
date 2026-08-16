@@ -198,25 +198,31 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		commentsEnabled = *req.CommentsEnabled
 	}
 
+	dietaryNotesEnabled := true
+	if req.DietaryNotesEnabled != nil {
+		dietaryNotesEnabled = *req.DietaryNotesEnabled
+	}
+
 	e := &Event{
-		ID:                 uuid.Must(uuid.NewV7()).String(),
-		OrganizerID:        organizerID,
-		Title:              req.Title,
-		Description:        req.Description,
-		EventDate:          eventDate,
-		EndDate:            endDate,
-		Location:           req.Location,
-		Timezone:           req.Timezone,
-		RetentionDays:      retentionDays,
-		ContactRequirement: contactRequirement,
-		ShowHeadcount:      showHeadcount,
-		ShowGuestList:      showGuestList,
-		RSVPDeadline:       rsvpDeadline,
-		MaxCapacity:        maxCapacity,
-		WaitlistEnabled:    waitlistEnabled,
-		CommentsEnabled:    commentsEnabled,
-		Status:             "draft",
-		ShareToken:         shareToken,
+		ID:                  uuid.Must(uuid.NewV7()).String(),
+		OrganizerID:         organizerID,
+		Title:               req.Title,
+		Description:         req.Description,
+		EventDate:           eventDate,
+		EndDate:             endDate,
+		Location:            req.Location,
+		Timezone:            req.Timezone,
+		RetentionDays:       retentionDays,
+		ContactRequirement:  contactRequirement,
+		ShowHeadcount:       showHeadcount,
+		ShowGuestList:       showGuestList,
+		RSVPDeadline:        rsvpDeadline,
+		MaxCapacity:         maxCapacity,
+		WaitlistEnabled:     waitlistEnabled,
+		CommentsEnabled:     commentsEnabled,
+		DietaryNotesEnabled: dietaryNotesEnabled,
+		Status:              "draft",
+		ShareToken:          shareToken,
 	}
 
 	if err := s.store.Create(ctx, e); err != nil {
@@ -413,6 +419,9 @@ func (s *Service) Update(ctx context.Context, eventID, organizerID string, req U
 	if req.CommentsEnabled != nil {
 		e.CommentsEnabled = *req.CommentsEnabled
 	}
+	if req.DietaryNotesEnabled != nil {
+		e.DietaryNotesEnabled = *req.DietaryNotesEnabled
+	}
 
 	if !s.smsEnabled && e.ContactRequirement == "phone" {
 		return nil, errcode.Validationf("phone-only contact requirement is not available when SMS is disabled")
@@ -550,24 +559,25 @@ func (s *Service) Duplicate(ctx context.Context, eventID, organizerID string) (*
 	}
 
 	newEvent := &Event{
-		ID:                 uuid.Must(uuid.NewV7()).String(),
-		OrganizerID:        organizerID,
-		Title:              "Copy of " + e.Title,
-		Description:        e.Description,
-		EventDate:          e.EventDate,
-		EndDate:            e.EndDate,
-		Location:           e.Location,
-		Timezone:           e.Timezone,
-		RetentionDays:      e.RetentionDays,
-		ContactRequirement: contactReq,
-		ShowHeadcount:      e.ShowHeadcount,
-		ShowGuestList:      e.ShowGuestList,
-		RSVPDeadline:       e.RSVPDeadline,
-		MaxCapacity:        e.MaxCapacity,
-		WaitlistEnabled:    e.WaitlistEnabled,
-		CommentsEnabled:    e.CommentsEnabled,
-		Status:             "draft",
-		ShareToken:         shareToken,
+		ID:                  uuid.Must(uuid.NewV7()).String(),
+		OrganizerID:         organizerID,
+		Title:               "Copy of " + e.Title,
+		Description:         e.Description,
+		EventDate:           e.EventDate,
+		EndDate:             e.EndDate,
+		Location:            e.Location,
+		Timezone:            e.Timezone,
+		RetentionDays:       e.RetentionDays,
+		ContactRequirement:  contactReq,
+		ShowHeadcount:       e.ShowHeadcount,
+		ShowGuestList:       e.ShowGuestList,
+		RSVPDeadline:        e.RSVPDeadline,
+		MaxCapacity:         e.MaxCapacity,
+		WaitlistEnabled:     e.WaitlistEnabled,
+		CommentsEnabled:     e.CommentsEnabled,
+		DietaryNotesEnabled: e.DietaryNotesEnabled,
+		Status:              "draft",
+		ShareToken:          shareToken,
 	}
 
 	if err := s.store.Create(ctx, newEvent); err != nil {

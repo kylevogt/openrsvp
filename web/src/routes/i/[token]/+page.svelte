@@ -234,7 +234,7 @@
 				email: email.trim(),
 				phone: normalizedPhone || undefined,
 				rsvpStatus,
-				dietaryNotes: dietaryNotes.trim() || undefined,
+				dietaryNotes: eventData?.dietaryNotesEnabled ? dietaryNotes.trim() || undefined : undefined,
 				plusOnes
 			};
 			if (Object.keys(answers).length > 0) {
@@ -605,19 +605,21 @@
 						</fieldset>
 
 						{#if rsvpStatus !== 'declined'}
-							<!-- Dietary Notes -->
-							<div>
-								<label for="rsvp-dietary" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									Dietary Notes <span class="text-neutral-400 font-normal">(optional)</span>
-								</label>
-								<textarea
-									id="rsvp-dietary"
-									bind:value={dietaryNotes}
-									placeholder="Any allergies or dietary requirements?"
-									rows="2"
-									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
-								></textarea>
-							</div>
+							{#if eventData?.dietaryNotesEnabled}
+								<!-- Dietary Notes -->
+								<div>
+									<label for="rsvp-dietary" class="block text-sm font-medium text-neutral-700 mb-1.5">
+										Dietary Notes <span class="text-neutral-400 font-normal">(optional)</span>
+									</label>
+									<textarea
+										id="rsvp-dietary"
+										bind:value={dietaryNotes}
+										placeholder="Any allergies or dietary requirements?"
+										rows="2"
+										class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
+									></textarea>
+								</div>
+							{/if}
 
 							<!-- Plus Ones -->
 							<div>

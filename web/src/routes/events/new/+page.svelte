@@ -39,6 +39,7 @@
 	let rsvpDeadline = $state('');
 	let maxCapacity = $state('');
 	let waitlistEnabled = $state(false);
+	let dietaryNotesEnabled = $state(true);
 	let retentionDays = $state('30');
 	let showRetention = $state(false);
 
@@ -115,6 +116,7 @@
 				contactRequirement,
 				showHeadcount,
 				showGuestList,
+				dietaryNotesEnabled,
 				retentionDays: parseInt(retentionDays)
 			};
 			if (endDate) body.endDate = datetimeLocalToUTC(endDate, timezone);
@@ -239,6 +241,18 @@
 						options={filteredContactOptions}
 					/>
 
+					<label class="flex items-center gap-3 cursor-pointer">
+						<input
+							type="checkbox"
+							bind:checked={dietaryNotesEnabled}
+							class="rounded border-neutral-300 text-primary focus:ring-primary/40"
+						/>
+						<div>
+							<span class="text-sm text-neutral-700">Ask for dietary notes</span>
+							<p class="text-xs text-neutral-400">Guests can share allergies or dietary requirements when they RSVP.</p>
+						</div>
+					</label>
+
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">Guest Visibility</legend>
 						<p class="text-xs text-neutral-400 mb-3">Control what attendance info is shown on the public invite page.</p>
@@ -358,6 +372,12 @@
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
 								<dt class="text-sm font-medium text-neutral-500">Contact Requirement</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{contactRequirementOptions.find(o => o.value === contactRequirement)?.label}</dd>
+							</div>
+						{/if}
+						{#if !dietaryNotesEnabled}
+							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+								<dt class="text-sm font-medium text-neutral-500">Dietary Notes</dt>
+								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">Not asked</dd>
 							</div>
 						{/if}
 						{#if showHeadcount || showGuestList}

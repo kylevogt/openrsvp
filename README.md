@@ -85,6 +85,33 @@ make build
 # Output: bin/openrsvp
 ```
 
+### 🧪 Tests
+
+```bash
+make test   # Go unit/integration tests (SQLite; set TEST_DATABASE_URL for Postgres)
+make lint   # golangci-lint
+make e2e    # Playwright end-to-end suite
+```
+
+`make e2e` builds the binary, starts it on a scratch database on port 8091, runs
+the suite against it, and tears it down again — no Docker required. Pass
+`E2E_PORT` to use a different port, or a spec name to narrow the run
+(`./scripts/e2e.sh app.spec.ts`). CI runs the same command as a blocking gate;
+when it fails, the server log and Playwright traces are uploaded as the
+`e2e-failure-artifacts` artifact.
+
+To drive the suite against a server you started yourself, point it at the base
+URL and at the server's log — the tests read magic link tokens out of it, which
+the server only writes when `ENV=development`:
+
+```bash
+cd tests/e2e
+E2E_BASE_URL=http://localhost:8091 E2E_SERVER_LOG=/path/to/server.log npx playwright test
+```
+
+With no `E2E_SERVER_LOG` set the tests fall back to `docker compose logs`, run
+from the repository root (override the service name with `E2E_COMPOSE_SERVICE`).
+
 ### 🗄️ Database & Migrations
 
 The full test suite runs against both SQLite and PostgreSQL in CI. Migrations live in per-dialect directories, `internal/database/migrations/sqlite` and `internal/database/migrations/postgres`, because some schema changes (for example CHECK-constraint edits) differ between the two engines. When you add a migration, add it to both directories.

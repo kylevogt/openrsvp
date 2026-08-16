@@ -34,6 +34,8 @@ Thumbs.db
 # Playwright
 web/test-results/
 web/playwright-report/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
 
 # Temp
 tmp/

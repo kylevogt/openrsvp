@@ -3,7 +3,7 @@ BUILD_DIR := ./bin
 CMD_DIR := ./cmd/openrsvp
 CGO_ENABLED := 1
 
-.PHONY: all build dev test clean lint lint-routes frontend embed
+.PHONY: all build dev test e2e clean lint lint-routes frontend embed
 
 all: lint test build
 
@@ -28,6 +28,9 @@ dev:
 test:
 	@echo "Running tests..."
 	CGO_ENABLED=$(CGO_ENABLED) go test ./... -v -race
+
+e2e:
+	@./scripts/e2e.sh
 
 clean:
 	@echo "Cleaning build artifacts..."

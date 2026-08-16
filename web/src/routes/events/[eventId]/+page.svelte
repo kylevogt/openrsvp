@@ -808,10 +808,12 @@
 											<option value="waitlisted">Waitlisted</option>
 										</select>
 									</div>
-									<div>
-										<label for="edit-dietary" class="block text-xs font-medium text-neutral-700 mb-1">Dietary Notes</label>
-										<input id="edit-dietary" type="text" bind:value={editAttendee.dietaryNotes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
-									</div>
+									{#if event?.dietaryNotesEnabled}
+										<div>
+											<label for="edit-dietary" class="block text-xs font-medium text-neutral-700 mb-1">Dietary Notes</label>
+											<input id="edit-dietary" type="text" bind:value={editAttendee.dietaryNotes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+										</div>
+									{/if}
 									<div>
 										<label for="edit-plusones" class="block text-xs font-medium text-neutral-700 mb-1">Plus Ones</label>
 										<input id="edit-plusones" type="number" min="0" max="10" bind:value={editAttendee.plusOnes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
@@ -831,7 +833,7 @@
 									</p>
 								</div>
 								<div class="flex items-center gap-3 ml-4">
-									{#if attendee.dietaryNotes}
+									{#if event?.dietaryNotesEnabled && attendee.dietaryNotes}
 										<span class="text-xs text-neutral-500" title="Dietary notes">{attendee.dietaryNotes}</span>
 									{/if}
 									{#if attendee.plusOnes > 0}

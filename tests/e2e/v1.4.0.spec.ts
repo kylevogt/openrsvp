@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 import {
+	BASE,
 	createEventViaAPI,
 	getOrCreateSession,
 	setSessionInBrowser,
 	submitRSVPViaAPI
 } from './helpers';
 
-const BASE = 'http://localhost:8091';
 const RUN_ID = Date.now();
 const ORGANIZER_EMAIL = `e2e-v14-organizer-${RUN_ID}@example.com`;
 

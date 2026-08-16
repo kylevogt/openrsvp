@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import {
+	BASE,
 	clearSession,
 	createEventViaAPI,
 	getOrCreateSession,
@@ -65,14 +66,14 @@ test.describe.serial('OpenRSVP E2E', () => {
 
 	test('session grants access to protected API', async () => {
 		// Verify via events endpoint (general rate limiter, not auth).
-		const res = await fetch('http://localhost:8091/api/v1/events', {
+		const res = await fetch(`${BASE}/api/v1/events`, {
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		expect(res.status).toBe(200);
 	});
 
 	test('protected API returns 401 without auth', async () => {
-		const res = await fetch('http://localhost:8091/api/v1/events');
+		const res = await fetch(`${BASE}/api/v1/events`);
 		expect(res.status).toBe(401);
 	});
 
@@ -123,7 +124,7 @@ test.describe.serial('OpenRSVP E2E', () => {
 	});
 
 	test('event API returns correct data', async () => {
-		const res = await fetch(`http://localhost:8091/api/v1/events/${testEventId}`, {
+		const res = await fetch(`${BASE}/api/v1/events/${testEventId}`, {
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		expect(res.status).toBe(200);
@@ -133,7 +134,7 @@ test.describe.serial('OpenRSVP E2E', () => {
 	});
 
 	test('events list API returns events', async () => {
-		const res = await fetch('http://localhost:8091/api/v1/events', {
+		const res = await fetch(`${BASE}/api/v1/events`, {
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		expect(res.status).toBe(200);
@@ -193,6 +194,31 @@ test.describe.serial('OpenRSVP E2E', () => {
 		).toBeVisible({ timeout: 10000 });
 	});
 
+	test('dietaryNotesEnabled toggle is respected on the invite page', async ({ page }) => {
+		// The shared test event leaves the setting at its default (on).
+		await page.goto(`/i/${testShareToken}`);
+		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
+		await expect(page.locator('#rsvp-dietary')).toBeVisible();
+
+		// An event created with the question off must not render the field.
+		const offEvent = await createEventViaAPI(sessionToken, { dietaryNotesEnabled: false });
+		await page.goto(`/i/${(offEvent as any).shareToken}`);
+		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
+		await expect(page.locator('#rsvp-dietary')).toHaveCount(0);
+
+		// Turning it back on restores the field.
+		await fetch(`${BASE}/api/v1/events/${(offEvent as any).id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${sessionToken}`
+			},
+			body: JSON.stringify({ dietaryNotesEnabled: true })
+		});
+		await page.goto(`/i/${(offEvent as any).shareToken}`);
+		await expect(page.locator('#rsvp-dietary')).toBeVisible({ timeout: 10000 });
+	});
+
 	test('invalid share token shows error', async ({ page }) => {
 		await page.goto('/i/invalidtoken123');
 		await expect(
@@ -248,7 +274,7 @@ test.describe.serial('OpenRSVP E2E', () => {
 		});
 		expect(res.status()).toBe(200);
 
-		const listRes = await fetch(`http://localhost:8091/api/v1/rsvp/event/${testEventId}`, {
+		const listRes = await fetch(`${BASE}/api/v1/rsvp/event/${testEventId}`, {
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		const attendees = (await listRes.json()).data || [];
@@ -257,13 +283,13 @@ test.describe.serial('OpenRSVP E2E', () => {
 
 	// Logout must run before rate limit test (both hit auth rate limiter).
 	test('logout invalidates session', async () => {
-		const logoutRes = await fetch('http://localhost:8091/api/v1/auth/logout', {
+		const logoutRes = await fetch(`${BASE}/api/v1/auth/logout`, {
 			method: 'POST',
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		expect(logoutRes.status).toBe(200);
 
-		const evRes = await fetch('http://localhost:8091/api/v1/events', {
+		const evRes = await fetch(`${BASE}/api/v1/events`, {
 			headers: { Authorization: `Bearer ${sessionToken}` }
 		});
 		expect(evRes.status).toBe(401);
