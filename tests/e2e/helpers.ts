@@ -1,12 +1,68 @@
 import { execSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
+import { dirname, join, resolve } from 'path';
 import type { Page } from '@playwright/test';
 
-const BASE = 'http://localhost:8091';
+/** Base URL of the server under test. Override with E2E_BASE_URL. */
+export const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:8091';
 
 // Cache sessions to avoid hitting rate limits.
 const sessionCache = new Map<string, string>();
 
-/** Request a magic link and extract the token from Docker logs. */
+/** Walk up from this file to the repository root (the directory with go.mod). */
+function repoRoot(): string {
+	let dir = __dirname;
+	for (;;) {
+		if (existsSync(join(dir, 'go.mod'))) return dir;
+		const parent = dirname(dir);
+		if (parent === dir) {
+			throw new Error(`Could not locate the repository root above ${__dirname}`);
+		}
+		dir = parent;
+	}
+}
+
+/**
+ * Read the most recent server logs.
+ *
+ * Two setups are supported, so the suite runs the same way whether the server
+ * came from `scripts/e2e.sh` or from docker compose:
+ *
+ *   - E2E_SERVER_LOG=/path/to/log — read that file directly.
+ *   - otherwise — `docker compose logs`, run from the repository root.
+ */
+function readServerLogs(): string {
+	const logFile = process.env.E2E_SERVER_LOG;
+	if (logFile) {
+		const path = resolve(logFile);
+		if (!existsSync(path)) {
+			throw new Error(`E2E_SERVER_LOG points at a file that does not exist: ${path}`);
+		}
+		return readFileSync(path, 'utf-8');
+	}
+
+	const service = process.env.E2E_COMPOSE_SERVICE ?? 'openrsvp';
+	try {
+		return execSync(`docker compose logs --tail=200 ${service} 2>&1`, {
+			cwd: repoRoot(),
+			encoding: 'utf-8'
+		});
+	} catch (err) {
+		throw new Error(
+			`Could not read server logs. Either set E2E_SERVER_LOG to the server's log ` +
+				`file, or make sure "docker compose logs ${service}" works from the repo ` +
+				`root. Run the suite with "make e2e" to have this handled for you. ` +
+				`(${(err as Error).message})`
+		);
+	}
+}
+
+/**
+ * Request a magic link and pull the token back out of the server log.
+ *
+ * The server logs the token only when ENV=development (see
+ * internal/auth/service.go), which is what both supported setups use.
+ */
 export async function getAuthToken(email: string): Promise<string> {
 	const res = await fetch(`${BASE}/api/v1/auth/magic-link`, {
 		method: 'POST',
@@ -15,22 +71,25 @@ export async function getAuthToken(email: string): Promise<string> {
 	});
 	if (!res.ok) throw new Error(`Magic link request failed: ${res.status}`);
 
-	await new Promise((r) => setTimeout(r, 500));
-
-	const logs = execSync(
-		'docker compose logs --tail=50 openrsvp 2>&1',
-		{ cwd: '/Users/ypk/git/openrsvp', encoding: 'utf-8' }
-	);
-
-	const lines = logs.split('\n');
-	for (const line of lines.reverse()) {
-		if (line.includes('magic link generated') && line.includes(email)) {
-			const tokenMatch = line.match(/token=([a-f0-9]{64})/);
-			if (tokenMatch) return tokenMatch[1];
+	// Logs are written asynchronously, so poll briefly rather than guessing a
+	// single sleep long enough for every machine.
+	const deadline = Date.now() + 5000;
+	for (;;) {
+		const lines = readServerLogs().split('\n');
+		for (const line of lines.reverse()) {
+			if (line.includes('magic link generated') && line.includes(email)) {
+				const tokenMatch = line.match(/token=([a-f0-9]{64})/);
+				if (tokenMatch) return tokenMatch[1];
+			}
 		}
+		if (Date.now() > deadline) break;
+		await new Promise((r) => setTimeout(r, 250));
 	}
 
-	throw new Error(`Could not find magic link token in Docker logs for ${email}`);
+	throw new Error(
+		`Could not find a magic link token for ${email} in the server logs. ` +
+			`The server must run with ENV=development for the token to be logged.`
+	);
 }
 
 /** Verify a magic link token and return the session token. */
