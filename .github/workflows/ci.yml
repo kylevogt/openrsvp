@@ -191,3 +191,67 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # After merge to main, a VERSION bump is the release signal. Tag vX.Y.Z and
+  # publish the multi-arch image. PRs never tag; an unchanged VERSION is a no-op.
+  maybe-tag:
+    name: Tag if VERSION bumped
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [frontend, backend, backend-postgres, lint, govulncheck, e2e, docker]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      tagged: ${{ steps.check.outputs.tagged }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 2
+      - name: Tag when VERSION changed
+        id: check
+        run: |
+          set -euo pipefail
+
+          current=$(tr -d '[:space:]' < VERSION)
+          if [[ ! "$current" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "VERSION must be semver X.Y.Z, got: '$current'"
+            exit 1
+          fi
+
+          previous=$(git show HEAD^:VERSION 2>/dev/null | tr -d '[:space:]' || true)
+
+          if [[ "$current" == "$previous" ]]; then
+            echo "VERSION unchanged ($current); skipping tag"
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          tag="v$current"
+          echo "VERSION bumped ${previous:-none} -> $current"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists on origin; skipping"
+            echo "tagged=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$tag" -m "$tag"
+          git push origin "$tag"
+
+          echo "tagged=true" >> "$GITHUB_OUTPUT"
+          echo "version=${tag}" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish image
+    needs: [maybe-tag]
+    if: needs.maybe-tag.outputs.tagged == 'true'
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/release.yml
+    with:
+      version: ${{ needs.maybe-tag.outputs.version }}
+    secrets: inherit
