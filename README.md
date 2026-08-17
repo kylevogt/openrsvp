@@ -475,6 +475,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.9.1 (2026-08-16)
+
+**Features:**
+- **Guests can now read the event description on the invite and RSVP pages.** Organizers already wrote one, and the public API already returned it, but neither guest page rendered it — so parking notes, gate codes and "bring a side" lived only on the organizer's event page. Both pages now show an Event Details card: the first few lines, then Show more / Show less for the rest. Short descriptions skip the fade and the toggle, so they are not truncated with no way to expand
+
 ### v1.9.0 (2026-08-16)
 
 **Features:**

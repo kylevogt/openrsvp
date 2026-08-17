@@ -8,6 +8,7 @@
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
+	import EventDescription from '$lib/components/EventDescription.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 
 	interface PublicInviteData {
@@ -386,6 +387,16 @@
 					<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 				</svg>
 				<p class="text-xs text-warning font-medium">{deadlineText}</p>
+			</div>
+		{/if}
+
+		<!-- Event Details -->
+		{#if eventData.description.trim()}
+			<div class="w-full max-w-lg mb-6">
+				<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-5">
+					<h2 class="font-display text-base font-semibold text-neutral-900 mb-2">Event Details</h2>
+					<EventDescription description={eventData.description} />
+				</div>
 			</div>
 		{/if}
 
