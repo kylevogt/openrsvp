@@ -5,6 +5,7 @@
 	import type { PublicEvent, Attendee, Message, PublicAttendance, EventQuestion, QuestionAnswer, ApiError } from '$lib/types';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
+	import EventDescription from '$lib/components/EventDescription.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 
 	interface RsvpData {
@@ -356,6 +357,14 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 					</svg>
 					Your RSVP has been updated successfully.
+				</div>
+			{/if}
+
+			<!-- Event Details -->
+			{#if eventData.description.trim()}
+				<div class="bg-surface rounded-xl shadow-lg border border-neutral-200 p-6 sm:p-8 mb-6">
+					<h2 class="font-display text-lg font-semibold text-neutral-900 mb-3">Event Details</h2>
+					<EventDescription description={eventData.description} />
 				</div>
 			{/if}
 

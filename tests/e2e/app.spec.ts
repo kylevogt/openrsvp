@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
 	BASE,
 	clearSession,
@@ -7,6 +7,29 @@ import {
 	setSessionInBrowser,
 	submitRSVPViaAPI
 } from './helpers';
+
+/**
+ * Guest pages clamp the event description to the first few lines and offer a
+ * toggle for the rest. Asserted against pages the suite already loads, because
+ * the public RSVP endpoints share a 30/min rate limiter with little headroom.
+ */
+async function expectExpandableDescription(page: Page) {
+	const card = page.getByRole('heading', { name: 'Event Details' }).locator('..');
+	const description = card.getByText('the gate code is 4821');
+	await expect(description).toBeVisible();
+
+	const showMore = card.getByRole('button', { name: 'Show more' });
+	await expect(showMore).toBeVisible();
+
+	const collapsedHeight = await description.evaluate((el) => el.clientHeight);
+	await showMore.click();
+	await expect(card.getByRole('button', { name: 'Show less' })).toBeVisible();
+	expect(await description.evaluate((el) => el.clientHeight)).toBeGreaterThan(collapsedHeight);
+
+	await card.getByRole('button', { name: 'Show less' }).click();
+	await expect(showMore).toBeVisible();
+	expect(await description.evaluate((el) => el.clientHeight)).toBe(collapsedHeight);
+}
 
 const RUN_ID = Date.now();
 const ORGANIZER_EMAIL = `e2e-organizer-${RUN_ID}@example.com`;
@@ -145,6 +168,7 @@ test.describe.serial('OpenRSVP E2E', () => {
 	test('public invite page loads with event details', async ({ page }) => {
 		await page.goto(`/i/${testShareToken}`);
 		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
+		await expectExpandableDescription(page);
 	});
 
 	test('invite page has RSVP form inputs', async ({ page }) => {
@@ -201,10 +225,26 @@ test.describe.serial('OpenRSVP E2E', () => {
 		await expect(page.locator('#rsvp-dietary')).toBeVisible();
 
 		// An event created with the question off must not render the field.
-		const offEvent = await createEventViaAPI(sessionToken, { dietaryNotesEnabled: false });
+		// Use a short description so this visit also covers the unfaded
+		// collapsed state (long text is covered by expectExpandableDescription).
+		const offEvent = await createEventViaAPI(sessionToken, {
+			dietaryNotesEnabled: false,
+			description: 'Pack a lawn chair.'
+		});
 		await page.goto(`/i/${(offEvent as any).shareToken}`);
 		await expect(page.locator('body')).toContainText(/E2E Test Event/, { timeout: 10000 });
 		await expect(page.locator('#rsvp-dietary')).toHaveCount(0);
+
+		const shortDescription = page.getByText('Pack a lawn chair.');
+		await expect(shortDescription).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Show more' })).toHaveCount(0);
+		expect(
+			await shortDescription.evaluate((el) => {
+				const cs = getComputedStyle(el);
+				const mask = cs.maskImage || cs.webkitMaskImage;
+				return Boolean(mask && mask !== 'none');
+			})
+		).toBe(false);
 
 		// Turning it back on restores the field.
 		await fetch(`${BASE}/api/v1/events/${(offEvent as any).id}`, {
@@ -232,6 +272,7 @@ test.describe.serial('OpenRSVP E2E', () => {
 		await expect(
 			page.locator('body')
 		).toContainText(/E2E Test Attendee|attending/i, { timeout: 10000 });
+		await expectExpandableDescription(page);
 	});
 
 	test('invalid RSVP token shows error', async ({ page }) => {

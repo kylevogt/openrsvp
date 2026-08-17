@@ -142,6 +142,17 @@ export async function clearSession(page: Page): Promise<void> {
 	await page.context().clearCookies();
 }
 
+/**
+ * Default description for test events. Long enough to overflow the guest
+ * pages' collapsed description, so the "Show more" toggle is exercised.
+ */
+export const TEST_EVENT_DESCRIPTION = [
+	'This is an automated e2e test event.',
+	'It has a deliberately long description so that the guest-facing pages have to clamp it to the first few lines and offer a way to expand the rest.',
+	'Please bring a side dish if you can, and let us know about any dietary restrictions ahead of time.',
+	'Parking is on the street and the gate code is 4821.'
+].join('\n\n');
+
 /** Create an event via API using Bearer token (bypasses CSRF). */
 export async function createEventViaAPI(
 	sessionToken: string,
@@ -156,7 +167,7 @@ export async function createEventViaAPI(
 		eventDate: `${dateStr}T18:00:00`,
 		timezone: 'America/New_York',
 		location: 'Test Venue, 123 Main St',
-		description: 'This is an automated e2e test event.',
+		description: TEST_EVENT_DESCRIPTION,
 		maxCapacity: 50,
 		rsvpDeadline: `${dateStr}T18:00:00`,
 		commentsEnabled: true,
