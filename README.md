@@ -475,6 +475,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.9.2 (2026-08-17)
+
+**Fixes:**
+- **Invite card text was hard to read over a background photo.** Body copy sat at regular weight on top of the image, so date, location, and the message disappeared into busy photos. The card now uses medium weight by default and semibold when a photo is set; the wash over the image is a bit stronger, and the italic footer uses the same ink as the rest of the card
+
 ### v1.9.1 (2026-08-16)
 
 **Features:**
