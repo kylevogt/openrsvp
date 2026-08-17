@@ -215,6 +215,7 @@
 
 <div
 	class="invite-card {templateConfig.wrapperClass}"
+	class:has-bg-image={!!backgroundImage}
 	style="
 		--primary: {primaryColor || '#E54666'};
 		--secondary: {secondaryColor || '#f472b6'};
@@ -378,9 +379,16 @@
 		padding: 2.5rem 2rem;
 		text-align: center;
 		font-family: var(--card-font, var(--font-body));
+		font-weight: 500;
 		max-width: 32rem;
 		width: 100%;
 		margin: 0 auto;
+	}
+
+	/* Photos show through the overlay; medium/semibold body copy holds up
+	   better than the default 400 weight against busy backgrounds. */
+	.has-bg-image {
+		font-weight: 600;
 	}
 
 	/* Background image layers */
@@ -394,11 +402,11 @@
 	.bg-image-overlay {
 		position: absolute;
 		inset: 0;
-		background: rgba(255, 255, 255, 0.85);
+		background: rgba(255, 255, 255, 0.9);
 		z-index: 0;
 	}
 	.bg-image-overlay-dark {
-		background: rgba(28, 25, 23, 0.88);
+		background: rgba(28, 25, 23, 0.92);
 	}
 
 	/* Balloon Party */
@@ -551,6 +559,9 @@
 		font-style: italic;
 		color: var(--primary);
 		letter-spacing: 0.02em;
+	}
+	.has-bg-image.elegant-affair .card-heading {
+		font-weight: 600;
 	}
 	.elegant-affair .decor-emoji {
 		font-size: 1.25rem;
@@ -757,7 +768,12 @@
 	.card-footer p {
 		color: var(--ink-muted);
 		font-size: 0.875rem;
+		font-weight: 500;
 		font-style: italic;
 		margin: 0;
+	}
+	.has-bg-image .card-footer p {
+		color: var(--ink);
+		font-weight: 600;
 	}
 </style>
