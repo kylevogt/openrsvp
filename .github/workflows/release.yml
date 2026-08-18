@@ -3,6 +3,15 @@ name: Release
 on:
   push:
     tags: ['v*']
+  # Called from CI after a VERSION bump on main. A tag push made with
+  # GITHUB_TOKEN does not start other workflows, so tagging alone would
+  # never publish the image.
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version tag to publish, e.g. v1.9.2'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -10,6 +19,7 @@ permissions:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
+  VERSION_TAG: ${{ inputs.version || github.ref_name }}
 
 jobs:
   # One native runner per architecture. Building linux/arm64 on an amd64 runner
@@ -46,6 +56,8 @@ jobs:
         uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           images: ${{ env.IMAGE }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ env.VERSION_TAG }}
       - name: Build and push by digest
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -93,9 +105,9 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{version}},value=${{ env.VERSION_TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.VERSION_TAG }}
+            type=semver,pattern={{major}},value=${{ env.VERSION_TAG }}
       - name: Create manifest list and push
         working-directory: /tmp/digests
         run: |
