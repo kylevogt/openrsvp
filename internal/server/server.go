@@ -40,6 +40,7 @@ type Server struct {
 	logger                zerolog.Logger
 	http                  *http.Server
 	authHandler           *auth.Handler
+	eventService          *event.Service
 	eventHandler          *event.Handler
 	seriesHandler         *event.SeriesHandler
 	rsvpHandler           *rsvp.Handler
@@ -931,6 +932,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		db:                    db,
 		logger:                logger,
 		authHandler:           authHandler,
+		eventService:          eventService,
 		eventHandler:          eventHandler,
 		seriesHandler:         seriesHandler,
 		rsvpHandler:           rsvpHandler,

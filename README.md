@@ -475,6 +475,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.9.3 (2026-08-18)
+
+**Fixes:**
+- **Shared invite links showed a generic site title in chat previews.** iMessage, Slack, WhatsApp and similar crawlers never run JavaScript, so they always read "OpenRSVP — Beautiful Invitations, Zero Ads" from the SPA shell. Invite pages now serve `OpenRSVP - {event title}` (and matching Open Graph / Twitter title tags) so the preview names the event. Drafts and unknown tokens keep the generic title
+
 ### v1.9.2 (2026-08-17)
 
 **Fixes:**

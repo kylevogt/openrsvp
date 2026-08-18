@@ -175,13 +175,28 @@ func (s *Server) handleHealthReady(w http.ResponseWriter, r *http.Request) {
 func (s *Server) mountStaticFiles(r *chi.Mux) {
 	staticFS := getFrontendFS()
 
+	var fallbackHTML []byte
 	if staticFS != nil {
-		fileServer := http.FileServer(http.FS(staticFS))
-
 		// Pre-read the SPA fallback page (200.html) for client-side routing.
 		// This is separate from index.html so that prerendered pages
 		// (like the landing page) aren't overwritten by the SPA shell.
-		fallbackHTML, _ := fs.ReadFile(staticFS, "200.html")
+		fallbackHTML, _ = fs.ReadFile(staticFS, "200.html")
+	}
+
+	// Invite pages need a server-rendered title: link-preview crawlers
+	// (iMessage, Slack, WhatsApp) fetch HTML and do not run JavaScript, so
+	// the client-side <svelte:head> title never reaches them.
+	// HEAD is registered too: chi otherwise matches the path, misses the
+	// method, and returns 405 instead of falling through to the SPA
+	// NotFound handler. Go's server drops the body for HEAD automatically.
+	invitePreview := func(w http.ResponseWriter, req *http.Request) {
+		s.serveInvitePreview(w, req, fallbackHTML)
+	}
+	r.Get("/i/{token}", invitePreview)
+	r.Head("/i/{token}", invitePreview)
+
+	if staticFS != nil {
+		fileServer := http.FileServer(http.FS(staticFS))
 
 		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 			// Try to serve the actual file first.
