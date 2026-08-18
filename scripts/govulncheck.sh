@@ -44,23 +44,37 @@ with open(ignore_path) as f:
             ignore.add(line.split()[0])
 
 called = set()
-with open(report_path) as f:
-    for line in f:
-        line = line.strip()
-        if not line:
-            continue
-        obj = json.loads(line)
-        finding = obj.get("finding")
-        if not finding:
-            continue
-        # Same rule govulncheck uses for "called" findings: the first frame
-        # of the trace names a function in our code (or a dependency we call).
-        trace = finding.get("trace") or []
-        if not trace or not trace[0].get("function"):
-            continue
-        osv = finding.get("osv")
-        if osv:
-            called.add(osv)
+# govulncheck -json emits pretty-printed objects, not one JSON value per line.
+decoder = json.JSONDecoder()
+text = open(report_path).read()
+idx = 0
+n = len(text)
+while idx < n:
+    while idx < n and text[idx].isspace():
+        idx += 1
+    if idx >= n:
+        break
+    try:
+        obj, end = decoder.raw_decode(text, idx)
+    except json.JSONDecodeError:
+        # Skip non-JSON progress noise if any leaked onto stdout.
+        nl = text.find("\n", idx)
+        idx = n if nl < 0 else nl + 1
+        continue
+    idx = end
+    finding = obj.get("finding")
+    if not finding:
+        continue
+    # Same rule govulncheck uses for "called" findings: the first frame
+    # of the trace names a function in our code (or a dependency we call).
+    trace = finding.get("trace") or []
+    if not trace or not trace[0].get("function"):
+        continue
+    osv = finding.get("osv")
+    if isinstance(osv, dict):
+        osv = osv.get("id")
+    if osv:
+        called.add(osv)
 
 skipped = sorted(called & ignore)
 remaining = sorted(called - ignore)
