@@ -1,0 +1,13 @@
+# Suppressions for govulncheck. One GO-* ID per line. Other lines are comments.
+# scripts/govulncheck.sh reads this file; CI still fails on any ID not listed here.
+#
+# github.com/lib/pq@v1.12.3 — published 2026-08-18, Fixed in: N/A.
+# These need a malicious/compromised Postgres endpoint (or .pgpass/GSS edge
+# cases) to exploit. Revisit when lib/pq ships a patch, or when we switch to pgx.
+GO-2026-6173
+GO-2026-6172
+GO-2026-6171
+GO-2026-6170
+GO-2026-6169
+GO-2026-6168
+GO-2026-6166

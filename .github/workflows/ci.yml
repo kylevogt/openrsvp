@@ -133,8 +133,9 @@ jobs:
       - name: Install govulncheck
         run: go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
       - name: Run govulncheck
-        # Blocking gate. Reported vulnerabilities fail the build.
-        run: govulncheck ./...
+        # Blocking gate. IDs in .govulncheck-ignore are skipped (no patched
+        # lib/pq release yet); any other finding still fails the build.
+        run: ./scripts/govulncheck.sh
 
   e2e:
     name: End-to-End (Playwright)
