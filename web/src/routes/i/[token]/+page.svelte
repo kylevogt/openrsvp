@@ -300,7 +300,9 @@
 </script>
 
 <svelte:head>
-	<title>{eventData ? `${eventData.title} — You're Invited` : "You're Invited"} — OpenRSVP</title>
+	<title>{eventData ? `OpenRSVP - ${eventData.title}` : 'OpenRSVP'}</title>
+	<meta property="og:title" content={eventData ? `OpenRSVP - ${eventData.title}` : 'OpenRSVP'} />
+	<meta name="twitter:title" content={eventData ? `OpenRSVP - ${eventData.title}` : 'OpenRSVP'} />
 </svelte:head>
 
 <div class="invite-page page-gradient min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12">
