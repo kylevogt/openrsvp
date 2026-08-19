@@ -10,6 +10,7 @@
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
 	import EventDescription from '$lib/components/EventDescription.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
+	import GuestList from '$lib/components/GuestList.svelte';
 
 	interface PublicInviteData {
 		event: PublicEvent;
@@ -24,12 +25,7 @@
 	let inviteData = $state<InviteCard | null>(null);
 	let attendance = $state<PublicAttendance | null>(null);
 	let eventQuestions = $state<EventQuestion[]>([]);
-	let showAllNames = $state(false);
-	const displayNames = $derived(
-		attendance?.names
-			? (showAllNames ? attendance.names : attendance.names.slice(0, 50))
-			: []
-	);
+	const guestList = $derived(attendance?.guests ?? []);
 
 	// RSVP form state
 	let name = $state('');
@@ -403,7 +399,7 @@
 		{/if}
 
 		<!-- Attendance Display -->
-		{#if attendance && (attendance.headcount > 0 || (attendance.names && attendance.names.length > 0))}
+		{#if attendance && (attendance.headcount > 0 || guestList.length > 0)}
 			{#if !(submitted && rsvpStatus === 'declined')}
 				<div class="w-full max-w-lg mb-8">
 					<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-5">
@@ -415,33 +411,7 @@
 								<span class="font-medium">{attendance.headcount} {attendance.headcount === 1 ? 'person' : 'people'} attending</span>
 							</div>
 						{/if}
-						{#if attendance.names && attendance.names.length > 0}
-							<div class="mt-3 flex flex-wrap gap-2">
-								{#each displayNames as guestName}
-									<span class="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary border border-primary-light">
-										{guestName}
-									</span>
-								{/each}
-								{#if !showAllNames && attendance.names.length > 50}
-									<button
-										type="button"
-										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-										onclick={() => (showAllNames = true)}
-									>
-										+{attendance.names.length - 50} more
-									</button>
-								{/if}
-								{#if showAllNames && attendance.names.length > 50}
-									<button
-										type="button"
-										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-										onclick={() => (showAllNames = false)}
-									>
-										Show less
-									</button>
-								{/if}
-							</div>
-						{/if}
+						<GuestList guests={guestList} class="mt-3" />
 					</div>
 				</div>
 			{/if}

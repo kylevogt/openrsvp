@@ -7,6 +7,7 @@
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
 	import EventDescription from '$lib/components/EventDescription.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
+	import GuestList from '$lib/components/GuestList.svelte';
 
 	interface RsvpData {
 		attendee: Attendee;
@@ -24,15 +25,10 @@
 	let eventData = $state<PublicEvent | null>(null);
 	let attendance = $state<PublicAttendance | null>(null);
 	let shareToken = $state('');
-	let showAllNames = $state(false);
 	let eventQuestions = $state<EventQuestion[]>([]);
 	let editAnswers: Record<string, string> = $state({});
 	let waitlistPosition = $state<number | null>(null);
-	const displayNames = $derived(
-		attendance?.names
-			? (showAllNames ? attendance.names : attendance.names.slice(0, 50))
-			: []
-	);
+	const guestList = $derived(attendance?.guests ?? []);
 
 	// Edit form
 	let editing = $state(false);
@@ -546,7 +542,7 @@
 			</div>
 
 			<!-- Attendance Display -->
-			{#if attendance && (attendance.headcount > 0 || (attendance.names && attendance.names.length > 0)) && attendee.rsvpStatus !== 'declined'}
+			{#if attendance && (attendance.headcount > 0 || guestList.length > 0) && attendee.rsvpStatus !== 'declined'}
 				<div class="bg-surface rounded-xl shadow-lg border border-neutral-200 p-6 sm:p-8 mb-6">
 					<h2 class="font-display text-lg font-semibold text-neutral-900 mb-4">Who's Coming</h2>
 					{#if attendance.headcount > 0}
@@ -557,33 +553,7 @@
 							<span class="font-medium">{attendance.headcount} {attendance.headcount === 1 ? 'person' : 'people'} attending</span>
 						</div>
 					{/if}
-					{#if attendance.names && attendance.names.length > 0}
-						<div class="flex flex-wrap gap-2">
-							{#each displayNames as guestName}
-								<span class="inline-flex items-center rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary border border-primary-light">
-									{guestName}
-								</span>
-							{/each}
-							{#if !showAllNames && attendance.names.length > 50}
-								<button
-									type="button"
-									class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-									onclick={() => (showAllNames = true)}
-								>
-									+{attendance.names.length - 50} more
-								</button>
-							{/if}
-							{#if showAllNames && attendance.names.length > 50}
-								<button
-									type="button"
-									class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-									onclick={() => (showAllNames = false)}
-								>
-									Show less
-								</button>
-							{/if}
-						</div>
-					{/if}
+					<GuestList guests={guestList} />
 				</div>
 			{/if}
 

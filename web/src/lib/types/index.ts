@@ -142,9 +142,14 @@ export interface PublicEvent {
 	dietaryNotesEnabled: boolean;
 }
 
+export interface PublicGuest {
+	name: string;
+	plusOnes?: number;
+}
+
 export interface PublicAttendance {
 	headcount: number;
-	names?: string[];
+	guests?: PublicGuest[];
 }
 
 export interface CoHost {

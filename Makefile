@@ -3,7 +3,7 @@ BUILD_DIR := ./bin
 CMD_DIR := ./cmd/openrsvp
 CGO_ENABLED := 1
 
-.PHONY: all build dev test e2e clean lint lint-routes frontend embed
+.PHONY: all build dev demo test e2e clean lint lint-routes frontend embed
 
 all: lint test build
 
@@ -24,6 +24,11 @@ build: embed
 dev:
 	@echo "Running in development mode..."
 	CGO_ENABLED=$(CGO_ENABLED) go run $(CMD_DIR)
+
+# Unlike "dev", this embeds the frontend and seeds data — use it to look at the
+# app in a browser.
+demo:
+	@./scripts/dev-server.sh --seed
 
 test:
 	@echo "Running tests..."
