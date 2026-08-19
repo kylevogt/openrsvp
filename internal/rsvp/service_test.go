@@ -766,8 +766,8 @@ func TestGetPublicAttendanceGuestListOnly(t *testing.T) {
 	_, err = eventSvc.Publish(ctx, ev.ID, org.ID)
 	require.NoError(t, err)
 
-	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
-		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending", PlusOnes: 2,
 	})
 	require.NoError(t, err)
 
@@ -777,6 +777,13 @@ func TestGetPublicAttendanceGuestListOnly(t *testing.T) {
 	assert.Equal(t, 0, data.Attendance.Headcount)
 	assert.Equal(t, []string{"Alice"}, data.Attendance.Names)
 	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, data.Attendance.Guests)
+
+	result, err := svc.GetByTokenWithEvent(ctx, attendee.RSVPToken)
+	require.NoError(t, err)
+	require.NotNil(t, result.Attendance)
+	assert.Equal(t, 0, result.Attendance.Headcount)
+	assert.Equal(t, []string{"Alice"}, result.Attendance.Names)
+	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, result.Attendance.Guests)
 }
 
 func TestGetPublicAttendanceDisabled(t *testing.T) {

@@ -194,7 +194,8 @@ func (s *Service) asyncNotify(fn func()) {
 
 // PublicAttendance holds the attendance data visible on the public invite page.
 // Names stays a string list so already-loaded clients keep rendering. Guests
-// is additive and carries plus-one counts for clients that know about it.
+// is additive and carries plus-one counts only when the host also shows
+// headcount, so a name list cannot reconstruct a suppressed total.
 type PublicAttendance struct {
 	Headcount int           `json:"headcount"`
 	Names     []string      `json:"names,omitempty"`
@@ -210,6 +211,35 @@ func guestNames(guests []PublicGuest) []string {
 		names[i] = g.Name
 	}
 	return names
+}
+
+// publicGuests copies guests for the public payload. Plus-ones are omitted
+// unless the host also enabled headcount, so a name list cannot reconstruct
+// a suppressed attendance total.
+func publicGuests(guests []PublicGuest, includePlusOnes bool) []PublicGuest {
+	if len(guests) == 0 {
+		return nil
+	}
+	if includePlusOnes {
+		return guests
+	}
+	out := make([]PublicGuest, len(guests))
+	for i, g := range guests {
+		out[i] = PublicGuest{Name: g.Name}
+	}
+	return out
+}
+
+func buildPublicAttendance(headcount int, guests []PublicGuest, showHeadcount, showGuestList bool) *PublicAttendance {
+	attendance := &PublicAttendance{}
+	if showHeadcount {
+		attendance.Headcount = headcount
+	}
+	if showGuestList {
+		attendance.Names = guestNames(guests)
+		attendance.Guests = publicGuests(guests, showHeadcount)
+	}
+	return attendance
 }
 
 // PublicInviteData holds the combined event and invite data for the public invite page.
@@ -259,15 +289,7 @@ func (s *Service) GetPublicInvite(ctx context.Context, shareToken string) (*Publ
 		if err != nil {
 			return nil, fmt.Errorf("get public attendance: %w", err)
 		}
-		attendance := &PublicAttendance{}
-		if ev.ShowHeadcount {
-			attendance.Headcount = headcount
-		}
-		if ev.ShowGuestList {
-			attendance.Names = guestNames(guests)
-			attendance.Guests = guests
-		}
-		data.Attendance = attendance
+		data.Attendance = buildPublicAttendance(headcount, guests, ev.ShowHeadcount, ev.ShowGuestList)
 	}
 
 	// Populate capacity info on the public event.
@@ -591,15 +613,7 @@ func (s *Service) GetByTokenWithEvent(ctx context.Context, rsvpToken string) (*R
 		if err != nil {
 			return nil, fmt.Errorf("get public attendance: %w", err)
 		}
-		attendance := &PublicAttendance{}
-		if ev.ShowHeadcount {
-			attendance.Headcount = headcount
-		}
-		if ev.ShowGuestList {
-			attendance.Names = guestNames(guests)
-			attendance.Guests = guests
-		}
-		result.Attendance = attendance
+		result.Attendance = buildPublicAttendance(headcount, guests, ev.ShowHeadcount, ev.ShowGuestList)
 	}
 
 	// Populate capacity info on the public event.
