@@ -670,7 +670,6 @@ func TestGetPublicAttendanceNoAttendees(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 0, data.Attendance.Headcount)
-	assert.Empty(t, data.Attendance.Names)
 	assert.Empty(t, data.Attendance.Guests)
 }
 
@@ -713,8 +712,7 @@ func TestGetPublicAttendanceWithAttendees(t *testing.T) {
 	require.NotNil(t, data.Attendance)
 	// Headcount = Alice(1+2) + Bob(1+1) = 5 (only attending)
 	assert.Equal(t, 5, data.Attendance.Headcount)
-	// Names = only attending, sorted alphabetically
-	assert.Equal(t, []string{"Alice", "Bob"}, data.Attendance.Names)
+	// Guests = only attending, sorted alphabetically
 	assert.Equal(t, []PublicGuest{
 		{Name: "Alice", PlusOnes: 2},
 		{Name: "Bob", PlusOnes: 1},
@@ -746,7 +744,6 @@ func TestGetPublicAttendanceHeadcountOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 1, data.Attendance.Headcount)
-	assert.Nil(t, data.Attendance.Names)
 	assert.Nil(t, data.Attendance.Guests)
 }
 
@@ -775,14 +772,12 @@ func TestGetPublicAttendanceGuestListOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 0, data.Attendance.Headcount)
-	assert.Equal(t, []string{"Alice"}, data.Attendance.Names)
 	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, data.Attendance.Guests)
 
 	result, err := svc.GetByTokenWithEvent(ctx, attendee.RSVPToken)
 	require.NoError(t, err)
 	require.NotNil(t, result.Attendance)
 	assert.Equal(t, 0, result.Attendance.Headcount)
-	assert.Equal(t, []string{"Alice"}, result.Attendance.Names)
 	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, result.Attendance.Guests)
 }
 
@@ -832,7 +827,6 @@ func TestGetByTokenWithEventIncludesAttendance(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result.Attendance)
 	assert.Equal(t, 2, result.Attendance.Headcount) // 1 + 1 plus one
-	assert.Equal(t, []string{"Alice"}, result.Attendance.Names)
 	assert.Equal(t, []PublicGuest{{Name: "Alice", PlusOnes: 1}}, result.Attendance.Guests)
 }
 

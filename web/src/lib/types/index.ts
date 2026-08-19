@@ -149,16 +149,7 @@ export interface PublicGuest {
 
 export interface PublicAttendance {
 	headcount: number;
-	names?: string[];
 	guests?: PublicGuest[];
-}
-
-/** Prefer the additive guests list; fall back to names for older API payloads. */
-export function publicGuestList(attendance?: PublicAttendance | null): PublicGuest[] {
-	if (attendance?.guests && attendance.guests.length > 0) {
-		return attendance.guests;
-	}
-	return (attendance?.names ?? []).map((name) => ({ name }));
 }
 
 export interface CoHost {

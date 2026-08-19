@@ -4,12 +4,13 @@
 	import { api } from '$lib/api/client';
 	import { smsEnabled, loadAppConfig } from '$lib/stores/config';
 	import { formatDateTime } from '$lib/utils/dates';
-	import { publicGuestList, type PublicEvent, type InviteCard, type PublicAttendance, type EventQuestion, type ApiError, type PublicComment, type PaginatedComments } from '$lib/types';
+	import type { PublicEvent, InviteCard, PublicAttendance, EventQuestion, ApiError, PublicComment, PaginatedComments } from '$lib/types';
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
 	import EventDescription from '$lib/components/EventDescription.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
+	import GuestList from '$lib/components/GuestList.svelte';
 
 	interface PublicInviteData {
 		event: PublicEvent;
@@ -24,9 +25,7 @@
 	let inviteData = $state<InviteCard | null>(null);
 	let attendance = $state<PublicAttendance | null>(null);
 	let eventQuestions = $state<EventQuestion[]>([]);
-	let showAllNames = $state(false);
-	const guestList = $derived(publicGuestList(attendance));
-	const displayGuests = $derived(showAllNames ? guestList : guestList.slice(0, 50));
+	const guestList = $derived(attendance?.guests ?? []);
 
 	// RSVP form state
 	let name = $state('');
@@ -412,33 +411,7 @@
 								<span class="font-medium">{attendance.headcount} {attendance.headcount === 1 ? 'person' : 'people'} attending</span>
 							</div>
 						{/if}
-						{#if guestList.length > 0}
-							<div class="mt-3 flex flex-wrap gap-2">
-								{#each displayGuests as guest}
-									<span class="inline-flex items-center gap-1 rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary border border-primary-light">
-										{guest.name}{#if guest.plusOnes}<span class="opacity-80">+{guest.plusOnes}</span>{/if}
-									</span>
-								{/each}
-								{#if !showAllNames && guestList.length > 50}
-									<button
-										type="button"
-										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-										onclick={() => (showAllNames = true)}
-									>
-										+{guestList.length - 50} more
-									</button>
-								{/if}
-								{#if showAllNames && guestList.length > 50}
-									<button
-										type="button"
-										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
-										onclick={() => (showAllNames = false)}
-									>
-										Show less
-									</button>
-								{/if}
-							</div>
-						{/if}
+						<GuestList guests={guestList} class="mt-3" />
 					</div>
 				</div>
 			{/if}

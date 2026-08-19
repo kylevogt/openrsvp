@@ -193,29 +193,16 @@ func (s *Service) asyncNotify(fn func()) {
 }
 
 // PublicAttendance holds the attendance data visible on the public invite page.
-// Names stays a string list so already-loaded clients keep rendering. Guests
-// is additive and carries plus-one counts only when the host also shows
-// headcount, so a name list cannot reconstruct a suppressed total.
+// Guests carries plus-one counts only when the host also shows headcount, so
+// the guest list cannot be summed back into a total the host suppressed.
 type PublicAttendance struct {
 	Headcount int           `json:"headcount"`
-	Names     []string      `json:"names,omitempty"`
 	Guests    []PublicGuest `json:"guests,omitempty"`
 }
 
-func guestNames(guests []PublicGuest) []string {
-	if len(guests) == 0 {
-		return nil
-	}
-	names := make([]string, len(guests))
-	for i, g := range guests {
-		names[i] = g.Name
-	}
-	return names
-}
-
-// publicGuests copies guests for the public payload. Plus-ones are omitted
-// unless the host also enabled headcount, so a name list cannot reconstruct
-// a suppressed attendance total.
+// publicGuests returns the guests for the public payload. Plus-ones are
+// stripped unless the host also enabled headcount, so the guest list cannot be
+// summed back into a total the host suppressed.
 func publicGuests(guests []PublicGuest, includePlusOnes bool) []PublicGuest {
 	if len(guests) == 0 {
 		return nil
@@ -236,7 +223,6 @@ func buildPublicAttendance(headcount int, guests []PublicGuest, showHeadcount, s
 		attendance.Headcount = headcount
 	}
 	if showGuestList {
-		attendance.Names = guestNames(guests)
 		attendance.Guests = publicGuests(guests, showHeadcount)
 	}
 	return attendance

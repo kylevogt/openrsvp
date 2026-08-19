@@ -239,9 +239,6 @@ func TestHandleGetPublicInvite_WithAttendance(t *testing.T) {
 	attendance, ok := data["attendance"].(map[string]any)
 	require.True(t, ok, "attendance should be present")
 	assert.Equal(t, float64(3), attendance["headcount"]) // 1 + 2 plus ones
-	names, ok := attendance["names"].([]any)
-	require.True(t, ok)
-	assert.Equal(t, "Alice", names[0])
 	guests, ok := attendance["guests"].([]any)
 	require.True(t, ok)
 	alice, ok := guests[0].(map[string]any)
