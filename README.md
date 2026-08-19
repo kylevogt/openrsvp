@@ -300,7 +300,7 @@ All API endpoints are under `/api/v1`. The server also provides:
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/notifications/track/open/:logId` | Tracking pixel (public) |
-| GET | `/api/v1/notifications/event/:eventId/stats` | Email delivery stats (organizer) |
+| GET | `/api/v1/notifications/event/:eventId/stats` | Email send stats (organizer) |
 | GET | `/api/v1/notifications/event/:eventId` | Delivery log (organizer) |
 
 Open tracking is gated by `EMAIL_OPEN_TRACKING_ENABLED`.

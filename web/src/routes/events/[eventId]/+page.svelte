@@ -937,28 +937,24 @@
 			</Card>
 		{/if}
 
-		<!-- Email Delivery Stats -->
+		<!-- Email send stats -->
 		{#if emailStats && emailStats.totalSent > 0}
 			<Card class="mt-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Email Delivery</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">Email Stats</h2>
 				{/snippet}
-				<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+				<div class="grid grid-cols-3 gap-4">
 					<div class="text-center">
 						<p class="text-2xl font-bold font-display text-neutral-900">{emailStats.totalSent}</p>
 						<p class="text-xs text-neutral-500">Sent</p>
-					</div>
-					<div class="text-center">
-						<p class="text-2xl font-bold font-mono text-success">{emailStats.delivered}</p>
-						<p class="text-xs text-neutral-500">Delivered</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-info">{emailStats.opened}</p>
 						<p class="text-xs text-neutral-500">Opened</p>
 					</div>
 					<div class="text-center">
-						<p class="text-2xl font-bold font-mono text-error">{emailStats.bounced}</p>
-						<p class="text-xs text-neutral-500">Bounced</p>
+						<p class="text-2xl font-bold font-mono text-error">{emailStats.failed}</p>
+						<p class="text-xs text-neutral-500">Failed</p>
 					</div>
 				</div>
 			</Card>
