@@ -37,6 +37,9 @@ web/playwright-report/
 tests/e2e/test-results/
 tests/e2e/playwright-report/
 
+# Local dev server state (scripts/dev-server.sh)
+.dev/
+
 # Temp
 tmp/
 
