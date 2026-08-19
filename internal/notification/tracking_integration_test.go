@@ -2,9 +2,6 @@ package notification
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -40,18 +37,16 @@ func (p *captureProvider) SendBatch(ctx context.Context, msgs []*Message) ([]*Se
 }
 func (p *captureProvider) HealthCheck(context.Context) error { return nil }
 
-// fakeSuppression is a test SuppressionChecker + Suppressor.
+// fakeSuppression is a test SuppressionChecker.
 type fakeSuppression struct {
-	suppressed  map[string]bool // email -> suppressed
-	tokens      map[string]string
-	suppressed2 map[string]string // email -> reason captured on Suppress
+	suppressed map[string]bool // email -> suppressed
+	tokens     map[string]string
 }
 
 func newFakeSuppression() *fakeSuppression {
 	return &fakeSuppression{
-		suppressed:  map[string]bool{},
-		tokens:      map[string]string{},
-		suppressed2: map[string]string{},
+		suppressed: map[string]bool{},
+		tokens:     map[string]string{},
 	}
 }
 
@@ -63,12 +58,6 @@ func (f *fakeSuppression) GenerateUnsubscribeToken(_ context.Context, email, _ s
 	tok := "tok-" + email
 	f.tokens[email] = tok
 	return tok, nil
-}
-
-func (f *fakeSuppression) Suppress(_ context.Context, email, _, reason string) error {
-	f.suppressed[email] = true
-	f.suppressed2[email] = reason
-	return nil
 }
 
 func newTestRegistry(p Provider) *Registry {
@@ -210,141 +199,4 @@ func TestService_UnsubscribeFooter_AbsentWithoutSuppression(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, prov.last)
 	assert.NotContains(t, prov.last.Body, "unsubscribe")
-}
-
-// newTestHandler builds a Handler with stub auth/owner funcs for webhook tests.
-func newTestHandler(tracking *TrackingService, svc *Service, suppressor Suppressor) *Handler {
-	return NewHandler(
-		tracking, svc, suppressor,
-		func(next http.Handler) http.Handler { return next },
-		func(context.Context) (string, bool) { return "", false },
-		func(context.Context, string, string) error { return nil },
-		zerolog.Nop(),
-	)
-}
-
-func TestHandler_SendGridWebhook_BounceMarksLogAndSuppresses(t *testing.T) {
-	db := testutil.NewTestDB(t)
-	ctx := context.Background()
-	eventID := uuid.Must(uuid.NewV7()).String()
-	attendeeID := uuid.Must(uuid.NewV7()).String()
-	createParentRecordsForNotification(t, ctx, db, eventID, attendeeID)
-
-	logID := uuid.Must(uuid.NewV7()).String()
-	insertNotificationLog(t, ctx, db, logID, eventID, attendeeID, "sent", "delivered", "sg-msg-1")
-
-	tracking := NewTrackingService(db, zerolog.Nop())
-	fake := newFakeSuppression()
-	h := newTestHandler(tracking, nil, fake)
-
-	body := `[{"email":"bob@example.com","event":"bounce","type":"bounce","sg_message_id":"sg-msg-1","timestamp":1700000000}]`
-	req := httptest.NewRequest(http.MethodPost, "/webhooks/sendgrid", strings.NewReader(body))
-	rec := httptest.NewRecorder()
-	h.handleSendGridWebhook(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	// Log row marked bounced.
-	var status, bounceType string
-	err := db.QueryRowContext(ctx, "SELECT delivery_status, bounce_type FROM notification_log WHERE id = ?", logID).Scan(&status, &bounceType)
-	require.NoError(t, err)
-	assert.Equal(t, "bounced", status)
-	assert.Equal(t, "hard", bounceType)
-
-	// Address suppressed with reason "bounce".
-	assert.True(t, fake.suppressed["bob@example.com"])
-	assert.Equal(t, "bounce", fake.suppressed2["bob@example.com"])
-}
-
-func TestHandler_SendGridWebhook_SpamReportSuppresses(t *testing.T) {
-	db := testutil.NewTestDB(t)
-	ctx := context.Background()
-	eventID := uuid.Must(uuid.NewV7()).String()
-	attendeeID := uuid.Must(uuid.NewV7()).String()
-	createParentRecordsForNotification(t, ctx, db, eventID, attendeeID)
-
-	logID := uuid.Must(uuid.NewV7()).String()
-	insertNotificationLog(t, ctx, db, logID, eventID, attendeeID, "sent", "delivered", "sg-msg-spam")
-
-	tracking := NewTrackingService(db, zerolog.Nop())
-	fake := newFakeSuppression()
-	h := newTestHandler(tracking, nil, fake)
-
-	body := `[{"email":"carol@example.com","event":"spamreport","sg_message_id":"sg-msg-spam","timestamp":1700000000}]`
-	req := httptest.NewRequest(http.MethodPost, "/webhooks/sendgrid", strings.NewReader(body))
-	rec := httptest.NewRecorder()
-	h.handleSendGridWebhook(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	var status string
-	err := db.QueryRowContext(ctx, "SELECT delivery_status FROM notification_log WHERE id = ?", logID).Scan(&status)
-	require.NoError(t, err)
-	assert.Equal(t, "complained", status)
-	assert.Equal(t, "complaint", fake.suppressed2["carol@example.com"])
-}
-
-func TestHandler_SendGridWebhook_InvalidPayload(t *testing.T) {
-	db := testutil.NewTestDB(t)
-	tracking := NewTrackingService(db, zerolog.Nop())
-	h := newTestHandler(tracking, nil, newFakeSuppression())
-
-	req := httptest.NewRequest(http.MethodPost, "/webhooks/sendgrid", strings.NewReader("not json"))
-	rec := httptest.NewRecorder()
-	h.handleSendGridWebhook(rec, req)
-	assert.Equal(t, http.StatusBadRequest, rec.Code)
-}
-
-func TestHandler_SESWebhook_PermanentBounceSuppresses(t *testing.T) {
-	db := testutil.NewTestDB(t)
-	ctx := context.Background()
-	eventID := uuid.Must(uuid.NewV7()).String()
-	attendeeID := uuid.Must(uuid.NewV7()).String()
-	createParentRecordsForNotification(t, ctx, db, eventID, attendeeID)
-
-	logID := uuid.Must(uuid.NewV7()).String()
-	insertNotificationLog(t, ctx, db, logID, eventID, attendeeID, "sent", "delivered", "ses-msg-1")
-
-	tracking := NewTrackingService(db, zerolog.Nop())
-	fake := newFakeSuppression()
-	h := newTestHandler(tracking, nil, fake)
-
-	// SES notification arrives wrapped in an SNS envelope; Message is a
-	// JSON-encoded string.
-	body := `{"Type":"Notification","Message":"{\"notificationType\":\"Bounce\",\"mail\":{\"messageId\":\"ses-msg-1\"},\"bounce\":{\"bounceType\":\"Permanent\",\"bouncedRecipients\":[{\"emailAddress\":\"dave@example.com\"}]}}"}`
-	req := httptest.NewRequest(http.MethodPost, "/webhooks/ses", strings.NewReader(body))
-	rec := httptest.NewRecorder()
-	h.handleSESWebhook(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	var status, bounceType string
-	err := db.QueryRowContext(ctx, "SELECT delivery_status, bounce_type FROM notification_log WHERE id = ?", logID).Scan(&status, &bounceType)
-	require.NoError(t, err)
-	assert.Equal(t, "bounced", status)
-	assert.Equal(t, "hard", bounceType)
-	assert.Equal(t, "bounce", fake.suppressed2["dave@example.com"])
-}
-
-func TestHandler_Webhook_NilSuppressorDoesNotPanic(t *testing.T) {
-	db := testutil.NewTestDB(t)
-	ctx := context.Background()
-	eventID := uuid.Must(uuid.NewV7()).String()
-	attendeeID := uuid.Must(uuid.NewV7()).String()
-	createParentRecordsForNotification(t, ctx, db, eventID, attendeeID)
-
-	logID := uuid.Must(uuid.NewV7()).String()
-	insertNotificationLog(t, ctx, db, logID, eventID, attendeeID, "sent", "delivered", "sg-nil")
-
-	tracking := NewTrackingService(db, zerolog.Nop())
-	h := newTestHandler(tracking, nil, nil) // nil suppressor
-
-	body := `[{"email":"x@example.com","event":"bounce","type":"bounce","sg_message_id":"sg-nil","timestamp":1700000000}]`
-	req := httptest.NewRequest(http.MethodPost, "/webhooks/sendgrid", strings.NewReader(body))
-	rec := httptest.NewRecorder()
-	h.handleSendGridWebhook(rec, req)
-	assert.Equal(t, http.StatusOK, rec.Code)
-
-	// Delivery event still recorded even without a suppressor.
-	var status string
-	err := db.QueryRowContext(ctx, "SELECT delivery_status FROM notification_log WHERE id = ?", logID).Scan(&status)
-	require.NoError(t, err)
-	assert.Equal(t, "bounced", status)
 }

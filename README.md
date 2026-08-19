@@ -7,13 +7,12 @@ A self-hosted, privacy-first alternative to Evite. Create beautiful event invita
 - 🎨 **Beautiful Invitation Templates** — 5 customizable themes (Balloon Party, Confetti, Unicorn Magic, Superhero, Garden Picnic) with custom colors, fonts, and text
 - 🔐 **Passwordless Auth** — Magic link sign-in, no passwords to manage
 - 📋 **Easy RSVPs** — Guests respond with one click, no account needed. Track dietary needs and plus-ones
-- 📬 **Notifications** — Pluggable email (SMTP, SendGrid, SES) and SMS (Twilio, Vonage, SNS) providers
+- 📬 **Notifications** — Pluggable email (SMTP) and SMS (Twilio, Vonage, SNS) providers
 - 💬 **Messaging** — Two-way communication between organizers and attendees
 - ⏰ **Scheduled Reminders** — Automatic event reminders to guests
 - 📝 **Guestbook** — Attendees can leave comments on event pages, delete their own, with organizer moderation
 - 📥 **CSV Import** — Bulk import guest lists from CSV files with validation and duplicate detection
-- 🔗 **Webhooks** — Real-time HTTP callbacks for RSVP and event lifecycle events with HMAC signing
-- 📊 **Email Tracking** — Delivery status, open tracking, bounce/complaint handling, and per-event email statistics
+- 📊 **Email Tracking** — Open tracking and per-event send statistics
 - ✉️ **Unsubscribe & Suppression** — One-click unsubscribe footer on reminder/message emails, with a suppression list that skips opted-out addresses
 - 🗣️ **Guest Feedback** — A "Report a problem" widget on public RSVP pages lets guests flag issues without logging in
 - 🧭 **Setup Wizard** — First-run wizard for instance name, default timezone, sign-up policy, and support email
@@ -130,7 +129,6 @@ openrsvp/
 │   ├── invite/                    # Invite card templates + customization
 │   ├── message/                   # Organizer-attendee messaging
 │   ├── comment/                   # Event page guestbook/comments
-│   ├── webhook/                   # Webhook endpoints + SSRF-safe dispatcher
 │   ├── notification/              # Email/SMS provider interface + implementations
 │   ├── scheduler/                 # Background jobs (reminders, cleanup)
 │   ├── security/                  # Rate limiting, honeypot, CSRF, sanitization
@@ -154,7 +152,7 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 | `DB_DSN` | `/data/openrsvp.db` | Database connection string |
 | `UPLOADS_DIR` | `/data/uploads` | Directory for uploaded files |
 | `BASE_URL` | `http://localhost:8080` | Public URL for magic links and invites |
-| `NOTIFICATION_EMAIL_PROVIDER` | `smtp` | Email provider (`smtp`, `sendgrid`, `ses`) |
+| `NOTIFICATION_EMAIL_PROVIDER` | `smtp` | Email provider (`smtp`) |
 | `DEFAULT_RETENTION_DAYS` | `30` | Days after event to auto-delete data |
 | `FEEDBACK_GITHUB_TOKEN` | _(empty)_ | GitHub PAT for posting feedback as Issues |
 | `FEEDBACK_GITHUB_REPO` | _(empty)_ | Target repo for Issues, e.g. `owner/repo` |
@@ -174,22 +172,6 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 | `SMTP_USERNAME` | SMTP username |
 | `SMTP_PASSWORD` | SMTP password |
 | `SMTP_FROM` | Sender email address |
-
-**SendGrid** (`NOTIFICATION_EMAIL_PROVIDER=sendgrid`):
-
-| Variable | Description |
-|----------|-------------|
-| `SENDGRID_API_KEY` | SendGrid API key (`SG.xxxxx`) |
-| `SENDGRID_FROM` | Sender email address |
-
-**AWS SES** (`NOTIFICATION_EMAIL_PROVIDER=ses`):
-
-| Variable | Description |
-|----------|-------------|
-| `SES_REGION` | AWS region (e.g. `us-east-1`) |
-| `SES_USERNAME` | SES SMTP username |
-| `SES_PASSWORD` | SES SMTP password |
-| `SES_FROM` | Sender email address |
 
 ### 📱 SMS Providers (Optional)
 
@@ -299,19 +281,6 @@ All API endpoints are under `/api/v1`. The server also provides:
 | GET | `/api/v1/comments/event/:eventId` | List all comments (organizer) |
 | DELETE | `/api/v1/comments/event/:eventId/:commentId` | Delete any comment (organizer) |
 
-### 🔗 Webhooks
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/webhooks/event/:eventId` | Create webhook |
-| GET | `/api/v1/webhooks/event/:eventId` | List webhooks |
-| GET | `/api/v1/webhooks/:webhookId` | Get webhook |
-| PUT | `/api/v1/webhooks/:webhookId` | Update webhook |
-| DELETE | `/api/v1/webhooks/:webhookId` | Delete webhook |
-| POST | `/api/v1/webhooks/:webhookId/rotate-secret` | Rotate signing secret |
-| GET | `/api/v1/webhooks/:webhookId/deliveries` | Delivery history |
-| POST | `/api/v1/webhooks/:webhookId/test` | Send test webhook |
-
 ### 📥 CSV Import
 
 | Method | Path | Description |
@@ -331,12 +300,10 @@ All API endpoints are under `/api/v1`. The server also provides:
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/v1/notifications/track/open/:logId` | Tracking pixel (public) |
-| GET | `/api/v1/notifications/event/:eventId/stats` | Email delivery stats (organizer) |
+| GET | `/api/v1/notifications/event/:eventId/stats` | Email send stats (organizer) |
 | GET | `/api/v1/notifications/event/:eventId` | Delivery log (organizer) |
-| POST | `/api/v1/notifications/webhooks/sendgrid` | Inbound SendGrid delivery events (public) |
-| POST | `/api/v1/notifications/webhooks/ses` | Inbound SES delivery events (public) |
 
-Open tracking is gated by `EMAIL_OPEN_TRACKING_ENABLED`. The inbound delivery webhooks record bounces and complaints; provider signature verification is a tracked follow-up (see [Known limitations](#known-limitations)).
+Open tracking is gated by `EMAIL_OPEN_TRACKING_ENABLED`.
 
 ### ✉️ Unsubscribe
 
@@ -434,7 +401,7 @@ Each submission opens an Issue titled `[Feedback - bug] …` with labels `feedba
 
 **Option 2 — Email fallback**
 
-Requires `SMTP_*` (or another email provider) to be configured:
+Requires `SMTP_*` to be configured:
 
 ```
 FEEDBACK_EMAIL=feedback@yourdomain.com
@@ -454,10 +421,6 @@ For PostgreSQL, use `pg_dump`:
 docker compose exec postgres pg_dump -U openrsvp openrsvp > backup.sql
 ```
 
-### ⚠️ Known limitations
-
-**Inbound delivery webhooks are unauthenticated.** The SendGrid/SES delivery webhooks record bounces and complaints but do not yet verify provider signatures. Restrict access at the reverse proxy if you expose them. Signature verification is a tracked follow-up.
-
 ### 🔑 Operator note: rotate pre-v1.5.1 Postgres credentials
 
 If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Postgres password and confirm the Postgres port binds to `127.0.0.1` only. The old file shipped default `openrsvp:openrsvp` credentials and exposed the port on all interfaces; both were fixed in v1.5.1 (credentials now come from `.env`, port bound to localhost).
@@ -470,7 +433,7 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 | Frontend | SvelteKit + Tailwind CSS |
 | Database | SQLite or PostgreSQL (both supported, both CI-tested) |
 | Auth | Magic links (passwordless) |
-| Notifications | SMTP, SendGrid, SES, Twilio, Vonage, SNS |
+| Notifications | SMTP, Twilio, Vonage, SNS |
 | Deployment | Docker (multi-stage, single binary) |
 
 ## 📝 Changelog

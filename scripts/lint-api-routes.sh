@@ -46,9 +46,8 @@ extract_routes() {
   extract_routes message   /messages
   extract_routes scheduler /reminders
   extract_routes feedback     /feedback
-  extract_routes comment      /comments
-  extract_routes webhook      /webhooks
-  extract_routes notification /notifications
+	extract_routes comment      /comments
+	extract_routes notification /notifications
   extract_routes suppression    /unsubscribe
   extract_routes instanceconfig /setup
 

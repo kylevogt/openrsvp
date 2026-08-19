@@ -12,7 +12,7 @@ Building an open-source, self-hosted alternative to Evite focused on privacy, si
 | Frontend | SvelteKit + Tailwind CSS |
 | Database | SQLite (default) / PostgreSQL (option) |
 | Auth | Magic link (passwordless) |
-| Notifications | Pluggable providers (SMTP, SendGrid, SES for email; Twilio, Vonage for SMS) |
+| Notifications | Pluggable providers (SMTP for email; Twilio, Vonage, SNS for SMS) |
 | Bot defense | Honeypot fields + IP-based rate limiting |
 | Deployment | Multi-stage Docker build → single binary with embedded frontend |
 
@@ -35,8 +35,8 @@ openrsvp/
 │   ├── notification/
 │   │   ├── provider.go               # Provider interface
 │   │   ├── service.go                # Dispatch + routing
-│   │   ├── email/ (smtp, sendgrid, ses)
-│   │   ├── sms/ (twilio, vonage)
+│   │   ├── email/ (smtp)
+│   │   ├── sms/ (twilio, vonage, sns)
 │   │   └── templates/*.html          # Email templates (go:embed)
 │   ├── scheduler/                    # Background jobs (reminders, cleanup)
 │   ├── security/                     # Rate limiter, honeypot, CSRF, sanitization
@@ -167,8 +167,8 @@ Build all Svelte pages and components for the complete user experience.
 ## Phase 4: Notifications & Messaging (M)
 
 ### 4.1 Additional Providers
-- SendGrid (raw HTTP, no SDK), SES (AWS SDK v2), Twilio (raw HTTP), Vonage (raw HTTP)
-- Provider selection via env var: `NOTIFICATION_EMAIL_PROVIDER=sendgrid`
+- Twilio (raw HTTP), Vonage (raw HTTP), SNS (AWS SDK v2) for SMS
+- Email is SMTP only (`NOTIFICATION_EMAIL_PROVIDER=smtp`)
 
 ### 4.2 Background Scheduler
 - In-process worker pool using goroutines (no external queue)

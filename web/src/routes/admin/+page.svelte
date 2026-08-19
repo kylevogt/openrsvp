@@ -48,10 +48,7 @@
 	const notifItems = $derived(stats ? [
 		{ label: 'Total', value: stats.notifications.total, color: 'text-neutral-900' },
 		{ label: 'Sent', value: stats.notifications.sent, color: 'text-info' },
-		{ label: 'Delivered', value: stats.notifications.delivered, color: 'text-success' },
 		{ label: 'Opened', value: stats.notifications.opened, color: 'text-primary' },
-		{ label: 'Bounced', value: stats.notifications.bounced, color: 'text-error' },
-		{ label: 'Complained', value: stats.notifications.complained, color: 'text-warning' },
 		{ label: 'Failed', value: stats.notifications.failed, color: 'text-error' },
 	] : []);
 
@@ -155,7 +152,7 @@
 				{#if stats.notifications.total === 0}
 					<p class="text-sm text-neutral-400">No notifications sent yet.</p>
 				{:else}
-					<div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4">
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 						{#each notifItems as item}
 							<div class="text-center">
 								<p class="text-2xl font-bold {item.color}">{item.value}</p>

@@ -327,7 +327,6 @@ func (s *Store) ExportOrganizerData(ctx context.Context, organizerID string) (*E
 			"SELECT * FROM event_questions WHERE event_id IN " + in:  &doc.Questions,
 			"SELECT * FROM event_comments WHERE event_id IN " + in:   &doc.Comments,
 			"SELECT * FROM messages WHERE event_id IN " + in:         &doc.Messages,
-			"SELECT * FROM webhooks WHERE event_id IN " + in:         &doc.Webhooks,
 			"SELECT * FROM reminders WHERE event_id IN " + in:        &doc.Reminders,
 			"SELECT * FROM invite_cards WHERE event_id IN " + in:     &doc.InviteCards,
 			"SELECT * FROM notification_log WHERE event_id IN " + in: &doc.NotificationLog,
@@ -366,8 +365,6 @@ func (s *Store) DeleteOrganizerCascade(ctx context.Context, organizerID string) 
 	}{
 		// attendee_answers -> attendees -> events
 		{"DELETE FROM attendee_answers WHERE attendee_id IN (SELECT id FROM attendees WHERE event_id IN " + ev + ")", []any{organizerID}},
-		// webhook_deliveries -> webhooks -> events
-		{"DELETE FROM webhook_deliveries WHERE webhook_id IN (SELECT id FROM webhooks WHERE event_id IN " + ev + ")", []any{organizerID}},
 		// event_comments -> events
 		{"DELETE FROM event_comments WHERE event_id IN " + ev, []any{organizerID}},
 		// notification_log -> events
@@ -376,8 +373,6 @@ func (s *Store) DeleteOrganizerCascade(ctx context.Context, organizerID string) 
 		{"DELETE FROM messages WHERE event_id IN " + ev, []any{organizerID}},
 		// reminders -> events
 		{"DELETE FROM reminders WHERE event_id IN " + ev, []any{organizerID}},
-		// webhooks -> events
-		{"DELETE FROM webhooks WHERE event_id IN " + ev, []any{organizerID}},
 		// event_questions -> events
 		{"DELETE FROM event_questions WHERE event_id IN " + ev, []any{organizerID}},
 		// invite_cards -> events

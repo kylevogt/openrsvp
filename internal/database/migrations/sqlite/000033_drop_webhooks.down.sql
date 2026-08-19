@@ -1,0 +1,1 @@
+-- Restoring webhook tables is not supported. Recreate from 000027 if needed.

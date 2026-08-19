@@ -22,28 +22,8 @@ func buildNotificationRegistry(cfg *config.Config, logger zerolog.Logger) *notif
 		} else {
 			logger.Warn().Msg("email provider smtp selected but SMTP_HOST is empty")
 		}
-	case "sendgrid":
-		from := cfg.SendGridFrom
-		if from == "" {
-			from = cfg.SMTPFrom
-		}
-		if cfg.SendGridAPIKey == "" || from == "" {
-			logger.Warn().Msg("email provider sendgrid selected but SENDGRID_API_KEY or sender address is missing")
-			break
-		}
-		registry.Register(email.NewSendGridProvider(cfg.SendGridAPIKey, from))
-	case "ses":
-		from := cfg.SESFrom
-		if from == "" {
-			from = cfg.SMTPFrom
-		}
-		if cfg.SESRegion == "" || cfg.SESUsername == "" || cfg.SESPassword == "" || from == "" {
-			logger.Warn().Msg("email provider ses selected but SES_REGION/SES_USERNAME/SES_PASSWORD/sender is missing")
-			break
-		}
-		registry.Register(email.NewSESProvider(cfg.SESRegion, cfg.SESUsername, cfg.SESPassword, from))
 	default:
-		logger.Warn().Str("provider", cfg.NotificationEmailProvider).Msg("unknown email provider; no email provider registered")
+		logger.Warn().Str("provider", cfg.NotificationEmailProvider).Msg("unknown email provider; only smtp is supported")
 	}
 
 	switch strings.ToLower(strings.TrimSpace(cfg.NotificationSMSProvider)) {

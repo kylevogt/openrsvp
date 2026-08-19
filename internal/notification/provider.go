@@ -33,7 +33,7 @@ type SendResult struct {
 
 // Provider is the interface all notification providers must implement.
 type Provider interface {
-	// Name returns the provider identifier (e.g., "smtp", "sendgrid").
+	// Name returns the provider identifier (e.g. "smtp").
 	Name() string
 	// Channel returns which channel this provider serves.
 	Channel() Channel
