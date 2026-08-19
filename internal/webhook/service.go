@@ -250,8 +250,10 @@ func (s *Service) SendTest(ctx context.Context, webhookID string, dispatcher *Di
 		return nil, fmt.Errorf("create test delivery: %w", err)
 	}
 
-	// Deliver synchronously for test so we can return the result.
-	dispatcher.deliver(ctx, w, delivery, payloadBytes)
+	// Deliver synchronously so we can return the result. One attempt only:
+	// retries with backoff can take ~50s and would hang the HTTP handler
+	// (and any e2e covering it) when the endpoint is slow or unreachable.
+	dispatcher.deliverOnce(ctx, w, delivery, payloadBytes)
 
 	// Re-read the delivery to get the updated state.
 	updated, err := s.getDeliveryByID(ctx, delivery.ID)

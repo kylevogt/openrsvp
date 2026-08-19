@@ -543,6 +543,41 @@ func TestSendTest_HappyPath(t *testing.T) {
 	assert.Contains(t, result.Payload, `"eventType":"test"`)
 }
 
+// TestSendTest_SingleAttempt confirms a failing endpoint is tried once. Retries
+// would add at least 4s of backoff before a second attempt, which is how the
+// e2e "send test webhook" case timed out against a slow third-party host.
+func TestSendTest_SingleAttempt(t *testing.T) {
+	t.Parallel()
+	ctx := context.Background()
+	db := newDispatcherTestDB(t)
+	store := NewStore(db)
+
+	var calls int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+
+	w := createTestWebhook(t, ctx, store, db, srv.URL, "whsec_test")
+
+	svc := NewService(store, zerolog.Nop(), false)
+	d := newTestDispatcher(store)
+
+	start := time.Now()
+	result, err := svc.SendTest(ctx, w.ID, d)
+	elapsed := time.Since(start)
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	assert.Equal(t, int32(1), atomic.LoadInt32(&calls))
+	assert.Less(t, elapsed, 2*time.Second)
+	assert.Equal(t, "test", result.EventType)
+	require.NotNil(t, result.ResponseStatus)
+	assert.Equal(t, 500, *result.ResponseStatus)
+	assert.Equal(t, 1, result.Attempt)
+}
+
 // TestSendTest_WebhookNotFound covers the not-found branch.
 func TestSendTest_WebhookNotFound(t *testing.T) {
 	t.Parallel()

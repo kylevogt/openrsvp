@@ -9,6 +9,10 @@ import {
 
 const RUN_ID = Date.now();
 const ORGANIZER_EMAIL = `e2e-v14-organizer-${RUN_ID}@example.com`;
+// Loopback is rejected by SSRF at dial time, so delivery fails immediately
+// instead of hanging on a third-party host. These tests assert the API
+// records a delivery, not that a public endpoint was reached.
+const WEBHOOK_URL = 'https://127.0.0.1/e2e-webhook';
 
 let sessionToken: string;
 let testEventId: string;
@@ -170,14 +174,14 @@ test.describe.serial('v1.4.0 Features', () => {
 					Authorization: `Bearer ${sessionToken}`
 				},
 				body: JSON.stringify({
-					url: 'https://httpbin.org/post',
+					url: WEBHOOK_URL,
 					eventTypes: ['rsvp.created'],
 					description: 'E2E test webhook'
 				})
 			});
 			expect(res.status).toBe(201);
 			const json = await res.json();
-			expect(json.data.url).toBe('https://httpbin.org/post');
+			expect(json.data.url).toBe(WEBHOOK_URL);
 			expect(json.data.secret).toContain('whsec_');
 			webhookId = json.data.id;
 		});
@@ -280,7 +284,7 @@ test.describe.serial('v1.4.0 Features', () => {
 					Authorization: `Bearer ${sessionToken}`
 				},
 				body: JSON.stringify({
-					url: 'https://httpbin.org/post',
+					url: WEBHOOK_URL,
 					eventTypes: ['invalid.type']
 				})
 			});
@@ -474,7 +478,7 @@ test.describe.serial('v1.4.0 Features', () => {
 					Authorization: `Bearer ${sessionToken}`
 				},
 				body: JSON.stringify({
-					url: 'https://httpbin.org/post',
+					url: WEBHOOK_URL,
 					eventTypes: ['rsvp.created']
 				})
 			});

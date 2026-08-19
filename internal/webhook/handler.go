@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog"
@@ -296,7 +297,10 @@ func (h *Handler) handleSendTest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	delivery, err := h.service.SendTest(r.Context(), webhookID, h.dispatcher)
+	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
+	defer cancel()
+
+	delivery, err := h.service.SendTest(ctx, webhookID, h.dispatcher)
 	if err != nil {
 		ref := errcode.Ref()
 		h.logger.Error().Err(err).Str("error_code", ref).Str("webhook_id", webhookID).Msg("failed to send test webhook")

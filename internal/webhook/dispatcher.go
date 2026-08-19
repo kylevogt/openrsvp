@@ -123,9 +123,20 @@ func (d *Dispatcher) Dispatch(ctx context.Context, eventID, eventType string, da
 // deliver sends the webhook payload to the endpoint with HMAC-SHA256 signing.
 // It retries up to maxRetries times with exponential backoff.
 func (d *Dispatcher) deliver(ctx context.Context, wh *Webhook, delivery *Delivery, payloadBytes []byte) {
+	d.deliverAttempts(ctx, wh, delivery, payloadBytes, maxRetries)
+}
+
+// deliverOnce sends a single attempt with no retries. SendTest uses this so a
+// slow or unreachable endpoint cannot stall the request on the full retry
+// budget (up to ~50s with backoff).
+func (d *Dispatcher) deliverOnce(ctx context.Context, wh *Webhook, delivery *Delivery, payloadBytes []byte) {
+	d.deliverAttempts(ctx, wh, delivery, payloadBytes, 1)
+}
+
+func (d *Dispatcher) deliverAttempts(ctx context.Context, wh *Webhook, delivery *Delivery, payloadBytes []byte, attempts int) {
 	var lastErr error
 
-	for attempt := 1; attempt <= maxRetries; attempt++ {
+	for attempt := 1; attempt <= attempts; attempt++ {
 		delivery.Attempt = attempt
 
 		// Exponential backoff: 1s, 4s, 16s (4^(attempt-1) seconds).
@@ -225,7 +236,7 @@ func (d *Dispatcher) deliver(ctx context.Context, wh *Webhook, delivery *Deliver
 
 	// All retries exhausted.
 	if lastErr != nil {
-		errMsg := fmt.Sprintf("all %d attempts failed: %s", maxRetries, lastErr)
+		errMsg := fmt.Sprintf("all %d attempts failed: %s", attempts, lastErr)
 		delivery.Error = &errMsg
 	}
 	_ = d.store.UpdateDelivery(ctx, delivery)
