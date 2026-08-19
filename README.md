@@ -438,6 +438,14 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v2.0.0 (2026-08-19)
+
+**Breaking:**
+- **Organizer webhooks and SendGrid/SES email are gone.** The webhook UI offered event types that never fired, send-test deliveries blocked CI on a slow httpbin.org, and the inbound bounce/complaint endpoints were unauthenticated. Email is SMTP-only. SMS (Twilio, Vonage, SNS), the open-tracking pixel, and unsubscribe/suppression are unchanged. Existing databases drop `webhooks` / `webhook_deliveries` via migration `000033`. `NOTIFICATION_EMAIL_PROVIDER=sendgrid` or `ses` logs a warning and does not send
+- **Delivered / Bounced / Complained stats tiles are gone.** SMTP never learns those statuses without provider webhooks, so the counters would have stayed at zero. Event and admin dashboards now show Sent, Opened, and Failed
+
+v1.9.4 bumped `VERSION` but never tagged: the plus-ones merge failed e2e, so this is the first image that includes those guest-list pills as well.
+
 ### v1.9.4 (2026-08-19)
 
 **Fixes:**
