@@ -33,12 +33,6 @@ type Config struct {
 	SMTPUsername              string
 	SMTPPassword              string
 	SMTPFrom                  string
-	SendGridAPIKey            string
-	SendGridFrom              string
-	SESRegion                 string
-	SESUsername               string
-	SESPassword               string
-	SESFrom                   string
 	TwilioAccountSID          string
 	TwilioAuthToken           string
 	TwilioFromNumber          string
@@ -168,12 +162,6 @@ func Load() (*Config, error) {
 		SMTPUsername:              getEnv("SMTP_USERNAME", ""),
 		SMTPPassword:              getEnv("SMTP_PASSWORD", ""),
 		SMTPFrom:                  getEnv("SMTP_FROM", "noreply@openrsvp.local"),
-		SendGridAPIKey:            getEnv("SENDGRID_API_KEY", ""),
-		SendGridFrom:              getEnv("SENDGRID_FROM", ""),
-		SESRegion:                 getEnv("SES_REGION", ""),
-		SESUsername:               getEnv("SES_USERNAME", ""),
-		SESPassword:               getEnv("SES_PASSWORD", ""),
-		SESFrom:                   getEnv("SES_FROM", ""),
 		TwilioAccountSID:          getEnv("TWILIO_ACCOUNT_SID", ""),
 		TwilioAuthToken:           getEnv("TWILIO_AUTH_TOKEN", ""),
 		TwilioFromNumber:          getEnv("TWILIO_FROM_NUMBER", ""),

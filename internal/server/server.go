@@ -30,7 +30,6 @@ import (
 	"github.com/yannkr/openrsvp/internal/security"
 	"github.com/yannkr/openrsvp/internal/stats"
 	"github.com/yannkr/openrsvp/internal/suppression"
-	"github.com/yannkr/openrsvp/internal/webhook"
 )
 
 // Server is the main HTTP server for OpenRSVP.
@@ -50,7 +49,6 @@ type Server struct {
 	feedbackHandler       *feedback.Handler
 	reminderHandler       *scheduler.Handler
 	commentHandler        *comment.Handler
-	webhookHandler        *webhook.Handler
 	notifHandler          *notification.Handler
 	notifService          *notification.Service
 	statsHandler          *stats.Handler
@@ -236,12 +234,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	commentService := comment.NewService(commentStore, commentEventAdapter, commentRSVPAdapter)
 	commentHandler := comment.NewHandler(commentService, authMiddleware, comment.OrganizerFromCtx(organizerFromCtx), comment.EventOwnershipChecker(checkEventOwner), logger)
 
-	// Wire up webhook layer.
-	webhookStore := webhook.NewStore(db)
-	webhookService := webhook.NewService(webhookStore, logger, !cfg.IsDevelopment())
-	webhookDispatcher := webhook.NewDispatcher(webhookStore, logger)
-	webhookHandler := webhook.NewHandler(webhookService, webhookDispatcher, authMiddleware, webhook.OrganizerFromCtx(organizerFromCtx), webhook.EventOwnershipChecker(checkEventOwner), logger)
-
 	// Wire up email suppression / unsubscribe layer (consumed by notification).
 	suppressionStore := suppression.NewStore(db)
 	suppressionService := suppression.NewService(suppressionStore)
@@ -257,7 +249,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 	// Wire up notification tracking layer.
 	trackingService := notification.NewTrackingService(db, logger)
-	notifHandler := notification.NewHandler(trackingService, notifService, suppressionService, authMiddleware, notification.OrganizerFromCtx(organizerFromCtx), notification.EventOwnershipChecker(checkEventOwner), logger)
+	notifHandler := notification.NewHandler(trackingService, notifService, authMiddleware, notification.OrganizerFromCtx(organizerFromCtx), notification.EventOwnershipChecker(checkEventOwner), logger)
 
 	// Wire email sending into auth service (breaks circular dep via function).
 	if notifRegistry.Has(notification.ChannelEmail) {
@@ -301,14 +293,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("rsvp notify: failed to get event")
 				return
 			}
-
-			// Dispatch webhook for RSVP event.
-			go webhookDispatcher.Dispatch(context.Background(), eventID, "rsvp.created", map[string]any{
-				"attendeeId":   attendee.ID,
-				"attendeeName": attendee.Name,
-				"rsvpStatus":   attendee.RSVPStatus,
-				"eventId":      eventID,
-			})
 
 			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
 			location := ev.Location
@@ -557,9 +541,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			"/api/v1/auth/magic-link",
 			"/api/v1/auth/verify",
 			"/api/v1/comments/public/",
-			"/api/v1/feedback/public",         // unauthenticated guest bug reports
-			"/api/v1/unsubscribe",             // token-based email opt-out (no session)
-			"/api/v1/notifications/webhooks/", // inbound SendGrid/SES delivery events
+			"/api/v1/feedback/public", // unauthenticated guest bug reports
+			"/api/v1/unsubscribe",     // token-based email opt-out (no session)
 		},
 		IsProduction: cfg.Env == "production",
 	})
@@ -716,11 +699,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 	// Create default reminders (1 week and 3 days before) when an event is published.
 	eventService.SetOnPublish(func(ctx context.Context, e *event.Event) {
-		go webhookDispatcher.Dispatch(context.Background(), e.ID, "event.published", map[string]any{
-			"eventId": e.ID,
-			"title":   e.Title,
-		})
-
 		type defaultReminder struct {
 			offset  time.Duration
 			message string
@@ -767,11 +745,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	// Send cancellation notifications to attending/maybe attendees when an event is cancelled.
 	if notifRegistry.Has(notification.ChannelEmail) {
 		eventService.SetOnCancel(func(ctx context.Context, e *event.Event) {
-			go webhookDispatcher.Dispatch(context.Background(), e.ID, "event.cancelled", map[string]any{
-				"eventId": e.ID,
-				"title":   e.Title,
-			})
-
 			attendees, err := rsvpService.ListByEvent(ctx, e.ID)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", e.ID).Msg("cancel notify: failed to list attendees")
@@ -942,7 +915,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		feedbackHandler:       feedbackHandler,
 		reminderHandler:       reminderHandler,
 		commentHandler:        commentHandler,
-		webhookHandler:        webhookHandler,
 		notifHandler:          notifHandler,
 		notifService:          notifService,
 		statsHandler:          statsHandler,

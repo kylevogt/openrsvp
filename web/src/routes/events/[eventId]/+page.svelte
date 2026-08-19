@@ -431,7 +431,6 @@
 				<Button variant="outline" size="sm" href="/events/{eventId}/share">Share</Button>
 				<Button variant="outline" size="sm" href="/events/{eventId}/messages">Send Message</Button>
 				<Button variant="outline" size="sm" href="/events/{eventId}/import">Import Guests</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/webhooks">Webhooks</Button>
 				<Button variant="outline" size="sm" onclick={duplicateEvent}>Duplicate</Button>
 			</div>
 		</div>

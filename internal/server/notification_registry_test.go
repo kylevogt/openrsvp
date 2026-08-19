@@ -30,36 +30,6 @@ func TestBuildNotificationRegistrySMTPDefault(t *testing.T) {
 	assert.False(t, r.Has(notification.ChannelSMS))
 }
 
-func TestBuildNotificationRegistrySendGrid(t *testing.T) {
-	cfg := &config.Config{
-		NotificationEmailProvider: "sendgrid",
-		SendGridAPIKey:            "SG.test-key",
-		SendGridFrom:              "alerts@example.com",
-	}
-
-	r := buildNotificationRegistry(cfg, zerolog.Nop())
-
-	p, err := r.Get(notification.ChannelEmail)
-	require.NoError(t, err)
-	assert.Equal(t, "sendgrid", p.Name())
-}
-
-func TestBuildNotificationRegistrySES(t *testing.T) {
-	cfg := &config.Config{
-		NotificationEmailProvider: "ses",
-		SESRegion:                 "us-east-1",
-		SESUsername:               "ses-user",
-		SESPassword:               "ses-pass",
-		SESFrom:                   "ses@example.com",
-	}
-
-	r := buildNotificationRegistry(cfg, zerolog.Nop())
-
-	p, err := r.Get(notification.ChannelEmail)
-	require.NoError(t, err)
-	assert.Equal(t, "ses", p.Name())
-}
-
 func TestBuildNotificationRegistryTwilioSMS(t *testing.T) {
 	cfg := &config.Config{
 		NotificationEmailProvider: "smtp",
@@ -117,9 +87,8 @@ func TestBuildNotificationRegistrySNSSMS(t *testing.T) {
 
 func TestBuildNotificationRegistryMissingConfigSkipsProvider(t *testing.T) {
 	cfg := &config.Config{
-		NotificationEmailProvider: "sendgrid",
-		SendGridAPIKey:            "",
-		SendGridFrom:              "",
+		NotificationEmailProvider: "smtp",
+		SMTPHost:                  "",
 		NotificationSMSProvider:   "twilio",
 		TwilioAccountSID:          "",
 		TwilioAuthToken:           "",

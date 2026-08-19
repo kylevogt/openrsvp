@@ -3,7 +3,6 @@ package notification
 import (
 	"context"
 	"encoding/json"
-	"io"
 	"net/http"
 	"time"
 
@@ -26,31 +25,20 @@ type OrganizerFromCtx func(ctx context.Context) (string, bool)
 // EventOwnershipChecker verifies an organizer can manage an event.
 type EventOwnershipChecker func(ctx context.Context, eventID, organizerID string) error
 
-// Suppressor is the optional dependency the webhook handlers use to suppress an
-// address after a hard bounce or complaint. Satisfied by *suppression.Service.
-// A nil Suppressor disables suppression on inbound delivery events (the event
-// is still recorded in the notification log).
-type Suppressor interface {
-	Suppress(ctx context.Context, email, eventID, reason string) error
-}
-
 // Handler handles notification tracking HTTP endpoints.
 type Handler struct {
 	tracking       *TrackingService
 	service        *Service
-	suppressor     Suppressor
 	authMiddleware func(http.Handler) http.Handler
 	organizerFrom  OrganizerFromCtx
 	checkOwner     EventOwnershipChecker
 	logger         zerolog.Logger
 }
 
-// NewHandler creates a new notification Handler. suppressor may be nil to
-// disable suppression on inbound bounce/complaint webhooks.
+// NewHandler creates a new notification Handler.
 func NewHandler(
 	tracking *TrackingService,
 	service *Service,
-	suppressor Suppressor,
 	authMiddleware func(http.Handler) http.Handler,
 	organizerFrom OrganizerFromCtx,
 	checkOwner EventOwnershipChecker,
@@ -59,7 +47,6 @@ func NewHandler(
 	return &Handler{
 		tracking:       tracking,
 		service:        service,
-		suppressor:     suppressor,
 		authMiddleware: authMiddleware,
 		organizerFrom:  organizerFrom,
 		checkOwner:     checkOwner,
@@ -73,11 +60,6 @@ func (h *Handler) Routes() chi.Router {
 
 	// Public tracking endpoints (no auth).
 	r.Get("/track/open/{logId}", h.handleTrackOpen)
-
-	// Public provider delivery webhooks (no auth, CSRF-exempt — providers
-	// cannot present CSRF tokens). Mounted public by the orchestrator.
-	r.Post("/webhooks/sendgrid", h.handleSendGridWebhook)
-	r.Post("/webhooks/ses", h.handleSESWebhook)
 
 	// Authenticated endpoints.
 	r.Group(func(auth chi.Router) {
@@ -103,209 +85,6 @@ func (h *Handler) handleTrackOpen(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/gif")
 	w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate")
 	_, _ = w.Write(transparentGIF)
-}
-
-// maxWebhookBody caps inbound webhook payload size to defend against abuse.
-const maxWebhookBody = 1 << 20 // 1 MiB
-
-// sendGridEvent is one element of a SendGrid event webhook array. Only the
-// fields we act on are parsed; unknown fields are ignored.
-type sendGridEvent struct {
-	Email       string `json:"email"`
-	Event       string `json:"event"` // delivered, open, bounce, dropped, spamreport, ...
-	Type        string `json:"type"`  // for bounce: "bounce" (hard) or "blocked"
-	SGMessageID string `json:"sg_message_id"`
-	Timestamp   int64  `json:"timestamp"`
-}
-
-// handleSendGridWebhook processes a SendGrid event webhook (a JSON array of
-// events). It records each delivery event and suppresses addresses on hard
-// bounces and spam complaints.
-//
-// TODO: verify the SendGrid "Signed Event Webhook" signature
-// (X-Twilio-Email-Event-Webhook-Signature / -Timestamp) once the verification
-// public key is plumbed through config. Until then this endpoint trusts the
-// payload; deploy it behind a hard-to-guess path or a reverse-proxy allowlist.
-func (h *Handler) handleSendGridWebhook(w http.ResponseWriter, r *http.Request) {
-	var events []sendGridEvent
-	if err := json.NewDecoder(io.LimitReader(r.Body, maxWebhookBody)).Decode(&events); err != nil {
-		h.logger.Warn().Err(err).Msg("sendgrid webhook: invalid payload")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	for _, e := range events {
-		eventType, bounceType := mapSendGridEvent(e)
-		if eventType == "" {
-			continue // Unknown/ignored event type.
-		}
-
-		ts := time.Now().UTC()
-		if e.Timestamp > 0 {
-			ts = time.Unix(e.Timestamp, 0).UTC()
-		}
-
-		if e.SGMessageID != "" {
-			if err := h.tracking.ProcessDeliveryEvent(r.Context(), DeliveryEvent{
-				MessageID:  e.SGMessageID,
-				EventType:  eventType,
-				Timestamp:  ts,
-				BounceType: bounceType,
-			}); err != nil {
-				h.logger.Debug().Err(err).Str("message_id", e.SGMessageID).Msg("sendgrid webhook: process delivery event")
-			}
-		}
-
-		h.suppressOnFailure(r.Context(), eventType, bounceType, e.Email)
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-// mapSendGridEvent maps a SendGrid event to an internal delivery status and
-// bounce type. Returns ("", "") for events we do not track.
-func mapSendGridEvent(e sendGridEvent) (eventType, bounceType string) {
-	switch e.Event {
-	case "delivered":
-		return "delivered", ""
-	case "open":
-		return "opened", ""
-	case "click":
-		return "clicked", ""
-	case "bounce":
-		// SendGrid "bounce" is a hard bounce; "blocked" arrives as a separate
-		// event we treat as soft.
-		return "bounced", "hard"
-	case "blocked":
-		return "bounced", "soft"
-	case "dropped":
-		return "bounced", "hard"
-	case "spamreport":
-		return "complained", ""
-	default:
-		return "", ""
-	}
-}
-
-// snsNotification is the SNS envelope SES delivery notifications arrive in.
-type snsNotification struct {
-	Type    string `json:"Type"`
-	Message string `json:"Message"` // JSON-encoded SES event (stringified).
-}
-
-// sesEvent is the SES delivery notification carried inside the SNS Message.
-type sesEvent struct {
-	NotificationType string `json:"notificationType"` // Bounce, Complaint, Delivery
-	Mail             struct {
-		MessageID string `json:"messageId"`
-	} `json:"mail"`
-	Bounce struct {
-		BounceType        string `json:"bounceType"` // Permanent, Transient, Undetermined
-		BouncedRecipients []struct {
-			EmailAddress string `json:"emailAddress"`
-		} `json:"bouncedRecipients"`
-	} `json:"bounce"`
-	Complaint struct {
-		ComplainedRecipients []struct {
-			EmailAddress string `json:"emailAddress"`
-		} `json:"complainedRecipients"`
-	} `json:"complaint"`
-}
-
-// handleSESWebhook processes an Amazon SES delivery notification delivered via
-// SNS. It records the delivery event and suppresses recipients on permanent
-// bounces and complaints.
-//
-// TODO: verify the SNS message signature (SigningCertURL / Signature) and
-// handle SubscriptionConfirmation messages once SNS is configured. Until then
-// this endpoint trusts the payload; deploy behind an allowlist.
-func (h *Handler) handleSESWebhook(w http.ResponseWriter, r *http.Request) {
-	var envelope snsNotification
-	if err := json.NewDecoder(io.LimitReader(r.Body, maxWebhookBody)).Decode(&envelope); err != nil {
-		h.logger.Warn().Err(err).Msg("ses webhook: invalid payload")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	var ses sesEvent
-	if err := json.Unmarshal([]byte(envelope.Message), &ses); err != nil {
-		h.logger.Warn().Err(err).Msg("ses webhook: invalid SES message")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	eventType, bounceType, recipients := mapSESEvent(ses)
-	if eventType == "" {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	if ses.Mail.MessageID != "" {
-		if err := h.tracking.ProcessDeliveryEvent(r.Context(), DeliveryEvent{
-			MessageID:  ses.Mail.MessageID,
-			EventType:  eventType,
-			Timestamp:  time.Now().UTC(),
-			BounceType: bounceType,
-		}); err != nil {
-			h.logger.Debug().Err(err).Str("message_id", ses.Mail.MessageID).Msg("ses webhook: process delivery event")
-		}
-	}
-
-	for _, email := range recipients {
-		h.suppressOnFailure(r.Context(), eventType, bounceType, email)
-	}
-
-	w.WriteHeader(http.StatusOK)
-}
-
-// mapSESEvent maps an SES notification to an internal delivery status, bounce
-// type, and the affected recipient addresses. Returns "" for untracked types.
-func mapSESEvent(ses sesEvent) (eventType, bounceType string, recipients []string) {
-	switch ses.NotificationType {
-	case "Delivery":
-		return "delivered", "", nil
-	case "Bounce":
-		bt := "soft"
-		if ses.Bounce.BounceType == "Permanent" {
-			bt = "hard"
-		}
-		for _, r := range ses.Bounce.BouncedRecipients {
-			if r.EmailAddress != "" {
-				recipients = append(recipients, r.EmailAddress)
-			}
-		}
-		return "bounced", bt, recipients
-	case "Complaint":
-		for _, r := range ses.Complaint.ComplainedRecipients {
-			if r.EmailAddress != "" {
-				recipients = append(recipients, r.EmailAddress)
-			}
-		}
-		return "complained", "", recipients
-	default:
-		return "", "", nil
-	}
-}
-
-// suppressOnFailure suppresses an address (globally) after a hard bounce or a
-// complaint so it stops receiving mail. No-op without a suppressor, an empty
-// email, or for non-terminal events.
-func (h *Handler) suppressOnFailure(ctx context.Context, eventType, bounceType, email string) {
-	if h.suppressor == nil || email == "" {
-		return
-	}
-	var reason string
-	switch {
-	case eventType == "bounced" && bounceType == "hard":
-		reason = "bounce"
-	case eventType == "complained":
-		reason = "complaint"
-	default:
-		return
-	}
-	if err := h.suppressor.Suppress(ctx, email, "", reason); err != nil {
-		h.logger.Error().Err(err).Str("email", email).Str("reason", reason).Msg("failed to suppress address")
-	}
 }
 
 func (h *Handler) handleGetStats(w http.ResponseWriter, r *http.Request) {

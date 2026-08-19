@@ -230,35 +230,6 @@ export interface PaginatedComments {
 	nextCursor?: string;
 }
 
-export interface Webhook {
-	id: string;
-	eventId: string;
-	url: string;
-	secret?: string;
-	eventTypes: string[];
-	description: string;
-	enabled: boolean;
-	createdAt: string;
-	updatedAt: string;
-}
-
-export interface WebhookWithSecret extends Webhook {
-	secret: string;
-}
-
-export interface WebhookDelivery {
-	id: string;
-	webhookId: string;
-	eventType: string;
-	payload: string;
-	responseStatus?: number;
-	responseBody?: string;
-	error?: string;
-	attempt: number;
-	deliveredAt?: string;
-	createdAt: string;
-}
-
 export interface CSVImportRow {
 	name: string;
 	email: string;

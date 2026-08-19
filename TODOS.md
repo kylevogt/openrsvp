@@ -20,12 +20,6 @@
 - **Depends on:** Setup wizard (Phase 1 of Distribution Playbook) must ship first. **Setup wizard shipped in v1.6.0 — this TODO is now unblocked.**
 - **Added:** 2026-03-26 via /plan-eng-review
 
-### Webhook Provider Signature Verification (P2)
-- **What:** Verify inbound delivery webhook signatures for SendGrid and SES before recording bounce/complaint events.
-- **Why:** The inbound delivery webhooks (`POST /api/v1/notifications/webhooks/sendgrid|ses`, shipped in v1.6.0) are unauthenticated, so a third party could forge delivery events. SendGrid signs with an Ed25519 public key; SES uses SNS message signatures.
-- **Context:** Documented as a known limitation in the README. Until then, operators should restrict access to these endpoints at the reverse proxy.
-- **Added:** 2026-06-10
-
 ### Email Click-Tracking Redirect Endpoint (P2)
 - **What:** Implement a click-tracking redirect endpoint so `EMAIL_CLICK_TRACKING_ENABLED` does something.
 - **Why:** The `EMAIL_CLICK_TRACKING_ENABLED` config flag is reserved but unimplemented. Open tracking shipped in v1.6.0; click tracking needs a redirect endpoint that rewrites email links, records the click, then 302s to the destination.

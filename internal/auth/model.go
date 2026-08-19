@@ -71,7 +71,6 @@ type ExportDocument struct {
 	Questions       []map[string]any `json:"questions"`
 	Comments        []map[string]any `json:"comments"`
 	Messages        []map[string]any `json:"messages"`
-	Webhooks        []map[string]any `json:"webhooks"`
 	Reminders       []map[string]any `json:"reminders"`
 	InviteCards     []map[string]any `json:"inviteCards"`
 	NotificationLog []map[string]any `json:"notificationLog"`
