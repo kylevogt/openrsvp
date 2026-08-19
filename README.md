@@ -478,7 +478,7 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 ### v1.9.4 (2026-08-19)
 
 **Fixes:**
-- **Guest list pills hid plus-ones, so someone bringing extras looked like a party of one.** The invite and RSVP pages already counted plus-ones in the headcount, but each name chip only showed the person who RSVPed. Pills now include +n when that guest indicated they are bringing additional people
+- **Guest list pills hid plus-ones, so someone bringing extras looked like a party of one.** The invite and RSVP pages already counted plus-ones in the headcount, but each name chip only showed the person who RSVPed. Pills now include +n when that guest indicated they are bringing additional people. The existing `names` string list is unchanged; plus-one counts are an additive `guests` field, so a tab that loaded the previous client keeps rendering after the server is upgraded
 
 ### v1.9.3 (2026-08-18)
 

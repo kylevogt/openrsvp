@@ -193,9 +193,23 @@ func (s *Service) asyncNotify(fn func()) {
 }
 
 // PublicAttendance holds the attendance data visible on the public invite page.
+// Names stays a string list so already-loaded clients keep rendering. Guests
+// is additive and carries plus-one counts for clients that know about it.
 type PublicAttendance struct {
 	Headcount int           `json:"headcount"`
-	Names     []PublicGuest `json:"names,omitempty"`
+	Names     []string      `json:"names,omitempty"`
+	Guests    []PublicGuest `json:"guests,omitempty"`
+}
+
+func guestNames(guests []PublicGuest) []string {
+	if len(guests) == 0 {
+		return nil
+	}
+	names := make([]string, len(guests))
+	for i, g := range guests {
+		names[i] = g.Name
+	}
+	return names
 }
 
 // PublicInviteData holds the combined event and invite data for the public invite page.
@@ -250,7 +264,8 @@ func (s *Service) GetPublicInvite(ctx context.Context, shareToken string) (*Publ
 			attendance.Headcount = headcount
 		}
 		if ev.ShowGuestList {
-			attendance.Names = guests
+			attendance.Names = guestNames(guests)
+			attendance.Guests = guests
 		}
 		data.Attendance = attendance
 	}
@@ -581,7 +596,8 @@ func (s *Service) GetByTokenWithEvent(ctx context.Context, rsvpToken string) (*R
 			attendance.Headcount = headcount
 		}
 		if ev.ShowGuestList {
-			attendance.Names = guests
+			attendance.Names = guestNames(guests)
+			attendance.Guests = guests
 		}
 		result.Attendance = attendance
 	}

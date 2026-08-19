@@ -671,6 +671,7 @@ func TestGetPublicAttendanceNoAttendees(t *testing.T) {
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 0, data.Attendance.Headcount)
 	assert.Empty(t, data.Attendance.Names)
+	assert.Empty(t, data.Attendance.Guests)
 }
 
 func TestGetPublicAttendanceWithAttendees(t *testing.T) {
@@ -712,11 +713,12 @@ func TestGetPublicAttendanceWithAttendees(t *testing.T) {
 	require.NotNil(t, data.Attendance)
 	// Headcount = Alice(1+2) + Bob(1+1) = 5 (only attending)
 	assert.Equal(t, 5, data.Attendance.Headcount)
-	// Names = only attending, sorted alphabetically, with plus-ones
+	// Names = only attending, sorted alphabetically
+	assert.Equal(t, []string{"Alice", "Bob"}, data.Attendance.Names)
 	assert.Equal(t, []PublicGuest{
 		{Name: "Alice", PlusOnes: 2},
 		{Name: "Bob", PlusOnes: 1},
-	}, data.Attendance.Names)
+	}, data.Attendance.Guests)
 }
 
 func TestGetPublicAttendanceHeadcountOnly(t *testing.T) {
@@ -745,6 +747,7 @@ func TestGetPublicAttendanceHeadcountOnly(t *testing.T) {
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 1, data.Attendance.Headcount)
 	assert.Nil(t, data.Attendance.Names)
+	assert.Nil(t, data.Attendance.Guests)
 }
 
 func TestGetPublicAttendanceGuestListOnly(t *testing.T) {
@@ -772,7 +775,8 @@ func TestGetPublicAttendanceGuestListOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, data.Attendance)
 	assert.Equal(t, 0, data.Attendance.Headcount)
-	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, data.Attendance.Names)
+	assert.Equal(t, []string{"Alice"}, data.Attendance.Names)
+	assert.Equal(t, []PublicGuest{{Name: "Alice"}}, data.Attendance.Guests)
 }
 
 func TestGetPublicAttendanceDisabled(t *testing.T) {
@@ -821,7 +825,8 @@ func TestGetByTokenWithEventIncludesAttendance(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result.Attendance)
 	assert.Equal(t, 2, result.Attendance.Headcount) // 1 + 1 plus one
-	assert.Equal(t, []PublicGuest{{Name: "Alice", PlusOnes: 1}}, result.Attendance.Names)
+	assert.Equal(t, []string{"Alice"}, result.Attendance.Names)
+	assert.Equal(t, []PublicGuest{{Name: "Alice", PlusOnes: 1}}, result.Attendance.Guests)
 }
 
 func TestRemoveAttendeeWrongEvent(t *testing.T) {

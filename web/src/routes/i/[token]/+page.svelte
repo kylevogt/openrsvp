@@ -4,7 +4,7 @@
 	import { api } from '$lib/api/client';
 	import { smsEnabled, loadAppConfig } from '$lib/stores/config';
 	import { formatDateTime } from '$lib/utils/dates';
-	import type { PublicEvent, InviteCard, PublicAttendance, EventQuestion, ApiError, PublicComment, PaginatedComments } from '$lib/types';
+	import { publicGuestList, type PublicEvent, type InviteCard, type PublicAttendance, type EventQuestion, type ApiError, type PublicComment, type PaginatedComments } from '$lib/types';
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
@@ -25,11 +25,8 @@
 	let attendance = $state<PublicAttendance | null>(null);
 	let eventQuestions = $state<EventQuestion[]>([]);
 	let showAllNames = $state(false);
-	const displayGuests = $derived(
-		attendance?.names
-			? (showAllNames ? attendance.names : attendance.names.slice(0, 50))
-			: []
-	);
+	const guestList = $derived(publicGuestList(attendance));
+	const displayGuests = $derived(showAllNames ? guestList : guestList.slice(0, 50));
 
 	// RSVP form state
 	let name = $state('');
@@ -403,7 +400,7 @@
 		{/if}
 
 		<!-- Attendance Display -->
-		{#if attendance && (attendance.headcount > 0 || (attendance.names && attendance.names.length > 0))}
+		{#if attendance && (attendance.headcount > 0 || guestList.length > 0)}
 			{#if !(submitted && rsvpStatus === 'declined')}
 				<div class="w-full max-w-lg mb-8">
 					<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-5">
@@ -415,23 +412,23 @@
 								<span class="font-medium">{attendance.headcount} {attendance.headcount === 1 ? 'person' : 'people'} attending</span>
 							</div>
 						{/if}
-						{#if attendance.names && attendance.names.length > 0}
+						{#if guestList.length > 0}
 							<div class="mt-3 flex flex-wrap gap-2">
 								{#each displayGuests as guest}
 									<span class="inline-flex items-center gap-1 rounded-full bg-primary-light px-3 py-1 text-xs font-medium text-primary border border-primary-light">
 										{guest.name}{#if guest.plusOnes}<span class="opacity-80">+{guest.plusOnes}</span>{/if}
 									</span>
 								{/each}
-								{#if !showAllNames && attendance.names.length > 50}
+								{#if !showAllNames && guestList.length > 50}
 									<button
 										type="button"
 										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
 										onclick={() => (showAllNames = true)}
 									>
-										+{attendance.names.length - 50} more
+										+{guestList.length - 50} more
 									</button>
 								{/if}
-								{#if showAllNames && attendance.names.length > 50}
+								{#if showAllNames && guestList.length > 50}
 									<button
 										type="button"
 										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
