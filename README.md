@@ -438,6 +438,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v2.0.1 (2026-08-21)
+
+**Fixes:**
+- **"View on GitHub" buttons on the home page linked to the upstream fork instead of the deployment repo.** Both the hero and footer links pointed at `yannkr/openrsvp`; they now point at `kylevogt/openrsvp`
+
 ### v2.0.0 (2026-08-19)
 
 **Breaking:**
